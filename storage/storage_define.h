@@ -1,0 +1,7 @@
+#ifndef STORAGE_DEFINE_H
+#define STORAGE_DEFINE_H
+
+#define STORAGE_METHOD_BASE    0
+#define STORAGE_METHOD_SQLITE    1
+
+#endif
