@@ -1,11 +1,14 @@
-
-#include <iostream>
-
-using namespace std;
-
 #include <unistd.h>
 #include <iostream>
+
+#include <ndn-cpp-dev/face.hpp>
+#include <ndn-cpp-dev/name.hpp>
+#include <ndn-cpp-dev/common.hpp>
+
 #include "storage/sqlite/sqlite_handle.h"
+
+using namespace std;
+using namespace ndn;
 
 static const string ccnr_usage_message(
 "ndn_repo - NDNx Repository Daemon\n"
@@ -15,15 +18,18 @@ static const string ccnr_usage_message(
 
 int main(int argc, char **argv) {
     int opt;
-    sqlite_handle handle;
-    while ((opt = getopt(argc, argv, "h")) != -1) {
+    char* dbpath = 0;
+    while ((opt = getopt(argc, argv, "d:h")) != -1) {
         switch (opt) {
+        case 'd':
+            dbpath = optarg;
         case 'h':
             cout<<ccnr_usage_message<<endl;
         default:
             break;
         }
     }
+    sqlite_handle handle(dbpath);
     return 0;
 }
 

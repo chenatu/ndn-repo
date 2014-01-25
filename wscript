@@ -32,6 +32,9 @@ def configure(conf):
     conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
 
     conf.write_config_header('config.h')
+    
+    conf.check(features='cxx cxxprogram', lib=['ndn-cpp-dev'], libpath=['/usr/local/lib'], cflags=['-Wall'],  uselib_store='NDNCPPDEV', mandatory=True)
+    conf.env.append_value('INCLUDES', ['/usr/local/include'])
 
     conf.load('boost')
     conf.check_boost(lib='system test iostreams filesystem thread')
@@ -45,7 +48,7 @@ def build (bld):
         target = "ndn_repo",
         features = ["cxx", "cxxprogram"],
         source = bld.path.ant_glob(['ndn_repo_main.cc','storage/*.cc','storage/sqlite/*.cc']),
-        use = 'BOOST SQLITE3',
+        use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
 
