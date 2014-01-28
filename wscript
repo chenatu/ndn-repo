@@ -47,12 +47,10 @@ def build (bld):
     bld (
         target = "ndn_repo",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['ndn_repo_main.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['server/server.cc','storage/*.cc','storage/sqlite/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
-
-def build (bld):
     bld (
         target = "test_sqlite",
         features = ["cxx", "cxxprogram"],
