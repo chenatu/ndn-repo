@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
             break;
         }
     }
-    sqlite_handle handle(dbpath);
+    sqlite_handle handle(string(dbpath));
     return 0;
 }
 
