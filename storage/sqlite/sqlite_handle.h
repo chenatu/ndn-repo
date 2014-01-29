@@ -14,6 +14,7 @@ class sqlite_handle:public storage_handle{
 public:
 	sqlite_handle();
 	sqlite_handle(string dbpath);
+	~sqlite_handle();
 	virtual int insert_encrypted_data(string& name, string &data);
 	virtual int delete_data(string& name);
 	virtual int check_data(string& name, string& blobdata);

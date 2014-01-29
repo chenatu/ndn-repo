@@ -46,6 +46,11 @@ sqlite_handle::sqlite_handle(string dbpath){
 	}
 }
 
+sqlite_handle::~sqlite_handle(){
+	sqlite3_close(db);
+}
+
+
 //Temporarily assigned the datatype of every component. needs to be further discussed
 
 int sqlite_handle::insert_encrypted_data(string& name, string &data){

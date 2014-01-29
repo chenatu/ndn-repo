@@ -1,11 +1,11 @@
-#ifndef WRITE_ECHO_H
-#define WRITE_ECHO_H
+#ifndef READ_ECHO_H
+#define READ_ECHO_H
 
 #include "ndn_handle_common.h"
 
-class write_echo{
+class read_echo{
 public:
-  write_echo(Face face, storage_handle* p_handle)
+  read_echo(Face face, storage_handle* p_handle)
     : face_(face)
     , keyChain_()
     , p_handle_(p_handle)

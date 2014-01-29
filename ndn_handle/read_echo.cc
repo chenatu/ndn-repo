@@ -1,7 +1,7 @@
-#include "write_echo.h"
+#include "read_echo.h"
 
 // Interest.
-void write_echo::operator()
+void read_echo::operator()
 (const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest) {
   std::cout << "<< I: " << *interest << std::endl;
 
@@ -17,7 +17,7 @@ void write_echo::operator()
 }
 
 // onRegisterFailed.
-void write_echo::operator()(const ptr_lib::shared_ptr<const Name>& prefix){
+void read_echo::operator()(const ptr_lib::shared_ptr<const Name>& prefix){
   std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
   face_.shutdown();
 }

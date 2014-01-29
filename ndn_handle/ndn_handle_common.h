@@ -10,6 +10,8 @@
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 
+#include "../storage/storage_handle.h"
+
 using namespace std;
 using namespace ndn;
 
