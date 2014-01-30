@@ -72,6 +72,13 @@ def build (bld):
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
+    bld (
+        target = "consumer",
+        features = ["cxx", "cxxprogram"],
+        source = bld.path.ant_glob(['test/consumer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        use = 'BOOST SQLITE3 NDNCPPDEV',
+        includes = ".",
+        )
 
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):

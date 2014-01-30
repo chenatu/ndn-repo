@@ -3,14 +3,14 @@
 // Interest.
 void read_echo::operator()
 (const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest) {
-  std::cout << "<< I: " << *interest << std::endl;
+  std::cout << "<< I: " << interest->getName() << std::endl;
 
-  ndn::Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
-  data.setFreshnessPeriod(1000); // 10 sec
+  Name name = Name(interest->getName());
+  Data data;
 
-  data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
+  p_handle_->check_data(name, data);
 
-  keyChain_.sign(data);
+  //keyChain_.sign(data);
   
   std::cout << ">> D: " << data << std::endl;
   face_.put(data);

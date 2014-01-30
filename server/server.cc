@@ -10,6 +10,7 @@
 #include "../storage/storage_handle.h"
 #include "../storage/sqlite/sqlite_handle.h"
 #include "../ndn_handle/write_echo.h"
+#include "../ndn_handle/read_echo.h"
 
 using namespace std;
 using namespace ndn;
@@ -40,9 +41,9 @@ int main(int argc, char **argv) {
     try {
         Face face;
 
-        write_echo echo(face, p_handle);
+        read_echo echo(face, p_handle);
 
-        Name prefix("/localhost/testApp");
+        Name prefix("/local/test");
         cout << "Register prefix  " << prefix.toUri() << endl;
         echo.id_ = face.setInterestFilter(prefix, func_lib::ref(echo), func_lib::ref(echo));
 

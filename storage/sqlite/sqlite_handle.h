@@ -17,7 +17,7 @@ public:
 	~sqlite_handle();
 	virtual int insert_encrypted_data(Name& name, Data &data);
 	virtual int delete_data(Name& name);
-	virtual int check_data(Name& name, Data& blobdata);
+	virtual int check_data(Name& name, Data& data);
 private:
 	sqlite3 *db;
 	char* dbpath;

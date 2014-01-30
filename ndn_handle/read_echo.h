@@ -12,7 +12,7 @@ public:
   { 
   }
   
-  // onInterest.
+  // onInterest. Read the name from database
   void operator()(const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest);
   
   // onRegisterFailed.

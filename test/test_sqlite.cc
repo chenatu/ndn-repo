@@ -39,7 +39,10 @@ int main(int argc, char **argv) {
     handle.insert_encrypted_data(name, data);
     handle.check_data(name, data);
     cout<<data.wireEncode().wire()<<endl;
-    handle.delete_data(name);
+    handle.insert_encrypted_data(name, data);
+    handle.check_data(name, data);
+    cout<<data.wireEncode().wire()<<endl;
+    //handle.delete_data(name);
     return 0;
 }
 

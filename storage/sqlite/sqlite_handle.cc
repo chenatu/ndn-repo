@@ -37,7 +37,7 @@ sqlite_handle::sqlite_handle(string dbpath){
 		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB,encrypted INTEGER);"
 			, NULL, 0, &zErrMsg);
 		if(rc != SQLITE_OK){
-			cout<<zErrMsg<<endl;
+			cout<<zErrMsg<<" rc:"<<rc<<endl;
 			exit(EXIT_FAILURE);
 		}
 	}else{
@@ -62,7 +62,9 @@ int sqlite_handle::insert_encrypted_data(Name& name, Data &data){
 			sqlite3_bind_blob(pStmt, 2, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK)  
         {  
             rc = sqlite3_step(pStmt); 
-        }  
+        }
+        if(rc == SQLITE_CONSTRAINT)
+        	cout<<"The name of the data has existed!"<<endl;
         sqlite3_finalize(pStmt);   
 	}
 	return 0;
@@ -96,26 +98,25 @@ int sqlite_handle::delete_data(Name& name){
 
 int sqlite_handle::check_data(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
-	int rc = 0;
 	string sql = string("select * from NDN_REPO where name = ?;");
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK)  
-        {
-        	while (1) {
-            	rc = sqlite3_step(pStmt);
-            	if (rc == SQLITE_ROW) {
-                	data.wireDecode(Block(sqlite3_column_blob(pStmt, 0),sqlite3_column_bytes(pStmt, 0)));
-            	}
-            	else if (rc == SQLITE_DONE) {
-                	break;
-            	}
-	            else {
+		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK){
+	        while (1) {
+	            rc = sqlite3_step(pStmt);
+	            if (rc == SQLITE_ROW) {
+	                data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+	            }
+	            else if (rc == SQLITE_DONE) {
+	               	break;
+	            }
+		        else {
 					cout<<"Database query failure rc:"<<rc<<endl;
 					exit(EXIT_FAILURE);
-	            }
-            }
-        }  
-        sqlite3_finalize(pStmt);   
-	}
+		        }
+	        }
+	    }  
+	    sqlite3_finalize(pStmt);
+	}  
 	return 0;
 }
