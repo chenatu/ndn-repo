@@ -53,12 +53,13 @@ sqlite_handle::~sqlite_handle(){
 
 //Temporarily assigned the datatype of every component. needs to be further discussed
 
-int sqlite_handle::insert_encrypted_data(string& name, string &data){
+int sqlite_handle::insert_encrypted_data(Name& name, Data &data){
 	sqlite3_stmt* pStmt = NULL;
-	string sql = string("INSERT INTO NDN_REPO (name, data) VALUES (")+ name +string(", '?);");
+	string sql = string("INSERT INTO NDN_REPO (name, data) VALUES (?, ?);");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_blob(pStmt, 2, data.c_str(), data.length(), NULL) == SQLITE_OK)  
+		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK && 
+			sqlite3_bind_blob(pStmt, 2, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK)  
         {  
             rc = sqlite3_step(pStmt); 
         }  
@@ -69,12 +70,12 @@ int sqlite_handle::insert_encrypted_data(string& name, string &data){
 
 
 
-int sqlite_handle::delete_data(string& name){
+int sqlite_handle::delete_data(Name& name){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("DELETE from NDN_REPO where name = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_text(pStmt, 1, name.c_str(), name.length(), NULL) == SQLITE_OK) {
+		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK) {
         	while(1){
             	rc = sqlite3_step(pStmt); 
             	if (rc == SQLITE_DONE) {
@@ -93,17 +94,17 @@ int sqlite_handle::delete_data(string& name){
 	return 0;
 }
 
-int sqlite_handle::check_data(string& name, string& blobdata){
+int sqlite_handle::check_data(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
 	int rc = 0;
 	string sql = string("select * from NDN_REPO where name = ?;");
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_blob(pStmt, 1, name.c_str(), name.length(), NULL) == SQLITE_OK)  
+		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK)  
         {
         	while (1) {
             	rc = sqlite3_step(pStmt);
             	if (rc == SQLITE_ROW) {
-                	blobdata.assign((const char*)sqlite3_column_blob(pStmt, 0));
+                	data.wireDecode(Block(sqlite3_column_blob(pStmt, 0),sqlite3_column_bytes(pStmt, 0)));
             	}
             	else if (rc == SQLITE_DONE) {
                 	break;

@@ -3,6 +3,7 @@
 
 
 #include "../storage/sqlite/sqlite_handle.h"
+#include <ndn-cpp-dev/security/key-chain.hpp>
 
 using namespace std;
 
@@ -25,14 +26,20 @@ int main(int argc, char **argv) {
         }
     }
     sqlite_handle handle = sqlite_handle(dbpath);
-    string name = string("/a/b/c");
-    string &rname = name;
-    string data = string("abc");
-    string &rdata = data;
-    handle.insert_encrypted_data(rname, rdata);
-    handle.check_data(rname, rdata);
-    cout<<rdata<<endl;
-    handle.delete_data(rname);
+
+    KeyChain keyChain;
+
+    Name name("/local/test/1");
+
+    Data data(name);
+    data.setFreshnessPeriod(1000); // 10 sec
+    data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
+    keyChain.sign(data);
+
+    handle.insert_encrypted_data(name, data);
+    handle.check_data(name, data);
+    cout<<data.wireEncode().wire()<<endl;
+    handle.delete_data(name);
     return 0;
 }
 
