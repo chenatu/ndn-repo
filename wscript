@@ -33,7 +33,7 @@ def configure(conf):
 
     conf.write_config_header('config.h')
     
-    conf.check(features='cxx cxxprogram', lib=['ndn-cpp-dev'], libpath=['/usr/local/lib'], cflags=['-Wall'],  uselib_store='NDNCPPDEV', mandatory=True)
+    conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'], uselib_store='NDNCPPDEV', mandatory=True)
     conf.env.append_value('INCLUDES', ['/usr/local/include'])
 
     conf.load('boost')

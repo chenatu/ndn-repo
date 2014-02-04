@@ -29,19 +29,26 @@ int main(int argc, char **argv) {
 
     KeyChain keyChain;
 
-    Name name("/local/test/1");
+    Name name("/a/b/c/d/1");
 
-    Data data(name);
+    Data data;
     data.setFreshnessPeriod(1000); // 10 sec
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
     keyChain.sign(data);
 
-    handle.insert_encrypted_data(name, data);
-    handle.check_data(name, data);
-    cout<<data.wireEncode().wire()<<endl;
-    handle.insert_encrypted_data(name, data);
-    handle.check_data(name, data);
-    cout<<data.wireEncode().wire()<<endl;
+    Data newdata;
+
+    Name prefix("/local/test");
+
+    handle.insert_data(name, data);
+    //handle.check_data(name, newdata);
+    //cout<<newdata.wireEncode().wire()<<endl;
+    //handle.insert_data(name, data);
+    //handle.check_data(name, newdata);
+    //cout<<newdata.wireEncode().wire()<<endl;
+    //handle.insert_data(prefix, data);
+    //handle.check_data(prefix, newdata);
+    //cout<<newdata.wireEncode().wire()<<endl;
     //handle.delete_data(name);
     return 0;
 }

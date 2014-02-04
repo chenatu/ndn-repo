@@ -15,11 +15,15 @@ public:
 	sqlite_handle();
 	sqlite_handle(string dbpath);
 	~sqlite_handle();
-	virtual int insert_encrypted_data(Name& name, Data &data);
+	virtual int insert_data(Name& name, Data &data);
 	virtual int delete_data(Name& name);
 	virtual int check_data(Name& name, Data& data);
+	//If has the name in database, return 1, else return 0
+	int check_name(Name& name);
 private:
+	//This is for name and data database
 	sqlite3 *db;
+	//db and index will be in the same directory
 	char* dbpath;
 };
 

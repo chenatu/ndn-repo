@@ -8,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <ndn-cpp-dev/face.hpp>
+#include <ndn-cpp-dev/status-response.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 
 #include "../storage/storage_handle.h"

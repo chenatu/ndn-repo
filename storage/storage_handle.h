@@ -15,10 +15,11 @@ public:
 	storage_handle();
 	int get_storage_method();
 	void set_storage_method(int storage_method);
-	virtual int insert_encrypted_data(Name& name, Data &data) = 0;
+	virtual int insert_data(Name& name, Data &data) = 0;
 	virtual int delete_data(Name& name) = 0;
 	//The simpliest check that to check the specific version and segment
 	virtual int check_data(Name& name, Data& data) = 0;
+
 private:
 	int __storage_method;
 };

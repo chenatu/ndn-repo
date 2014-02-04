@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
         Name prefix("/local/test");
         cout << "Register prefix  " << prefix.toUri() << endl;
-        echo.id_ = face.setInterestFilter(prefix, func_lib::ref(echo), func_lib::ref(echo));
+        face.setInterestFilter(prefix, func_lib::ref(echo), func_lib::ref(echo));
 
         face.processEvents();
     } catch (std::exception& e) {
