@@ -233,16 +233,22 @@ int sqlite_handle::delete_data(Name& name){
 	return 0;
 }
 
+//This function is the first version of data check following longest prefix match. 
 int sqlite_handle::check_data(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where name = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	vector<Data> vdata;
 	if(rc == SQLITE_OK){
 		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK){
 	        while (1) {
 	            rc = sqlite3_step(pStmt);
 	            if (rc == SQLITE_ROW) {
-	                data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+	            	Data edata;
+	            	//data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+	            	edata.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+	            	vdata.push_back(edata);
+
 	            }
 	            else if (rc == SQLITE_DONE) {
 	               	break;
@@ -253,12 +259,19 @@ int sqlite_handle::check_data(Name& name, Data& data){
 					exit(EXIT_FAILURE);
 		        }
 	        }
-	    }  
+	    }
+	    sort_data(vdata);
+	    data.wireDecode(vdata.begin()->wireEncode());
+	    cout<<"check_data size: "<<data.wireEncode().size()<<endl;
+	    cout<<"name: "<<data.getName()<<endl;
+    	cout<<data.wireEncode().wire()<<endl;
 	    sqlite3_finalize(pStmt);
 	}  
 	return 0;
 }
 
+
+//This is the exact name qeury in database.
 int sqlite_handle::check_name(Name& name){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where name = ?;");
@@ -282,4 +295,12 @@ int sqlite_handle::check_name(Name& name){
 	    sqlite3_finalize(pStmt);
 	}  
 	return 1;
+}
+
+void sqlite_handle::sort_data(vector<Data>& datas){
+	sort(datas.begin(), datas.end(), sqlite_handle::compare_data);
+}
+
+bool sqlite_handle::compare_data(Data data1, Data data2){
+	return (data1.getName()<data2.getName());
 }

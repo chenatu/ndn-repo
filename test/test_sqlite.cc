@@ -31,17 +31,17 @@ int main(int argc, char **argv) {
 
     Name name("/a/b/c/d/1");
 
-    Data data;
-    data.setFreshnessPeriod(1000); // 10 sec
-    data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
-    keyChain.sign(data);
-
+    //Data data(name);
+    //data.setFreshnessPeriod(2000); // 10 sec
+    //data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
+    //keyChain.sign(data);
+    //cout<<"data size: "<<data.wireEncode().size()<<endl;
+    //cout<<data.wireEncode().wire()<<endl;
+    
     Data newdata;
-
-    Name prefix("/local/test");
-
-    handle.insert_data(name, data);
+    //handle.insert_data(name, data);
     handle.check_data(name, newdata);
+    cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     cout<<newdata.wireEncode().wire()<<endl;
     //handle.insert_data(name, data);
     //handle.check_data(name, newdata);

@@ -6,13 +6,14 @@ void read_echo::operator()
   std::cout << "<< I: " << interest->getName() << std::endl;
 
   Name name = Name(interest->getName());
-  Data data;
+  Data data = Data(interest->getName());
 
   p_handle_->check_data(name, data);
 
   //keyChain_.sign(data);
   
-  std::cout << ">> D: " << data << std::endl;
+  std::cout << ">> D: "<<"size: "<<data.wireEncode().size()<<endl;
+  cout<<">> D: data: "<<data.wireEncode().wire()<<endl;
   face_.put(data);
 }
 
