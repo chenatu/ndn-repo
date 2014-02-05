@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
     Name prefix("/local/test");
 
     handle.insert_data(name, data);
-    //handle.check_data(name, newdata);
-    //cout<<newdata.wireEncode().wire()<<endl;
+    handle.check_data(name, newdata);
+    cout<<newdata.wireEncode().wire()<<endl;
     //handle.insert_data(name, data);
     //handle.check_data(name, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;

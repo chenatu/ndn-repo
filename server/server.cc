@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
         read_echo echo(face, p_handle);
 
-        Name prefix("/local/test");
+        Name prefix("/a/b/c/d");
         cout << "Register prefix  " << prefix.toUri() << endl;
         face.setInterestFilter(prefix, func_lib::ref(echo), func_lib::ref(echo));
 

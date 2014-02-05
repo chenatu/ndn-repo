@@ -49,7 +49,7 @@ BlockPrinter(const ndn::Block &block, const std::string &indent="")
 int main()
 {
   try {
-    ndn::Interest i(ndn::Name("/local/test/1"));
+    ndn::Interest i(ndn::Name("/a/b/c/d/1"));
     i.setScope(1);
     i.setInterestLifetime(1000);
     i.setMustBeFresh(true);

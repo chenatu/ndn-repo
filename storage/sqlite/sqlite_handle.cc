@@ -191,10 +191,12 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 
 	//Insert the name and the data
 	parentname = childname.getPrefix(-1);
+	sqlite3_reset(piStmt);
 	if (sqlite3_bind_blob(piStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK && 
 		sqlite3_bind_blob(piStmt, 2, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK &&
 		sqlite3_bind_blob(piStmt, 3, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){ 
 		rc = sqlite3_step(piStmt);
+		cout<<"insert the data: "<<data.wireEncode().wire()<<endl;
 		if(rc == SQLITE_CONSTRAINT){
         	cout<<"The name of the data has existed!"<<endl;
         	sqlite3_finalize(piStmt);
@@ -247,6 +249,7 @@ int sqlite_handle::check_data(Name& name, Data& data){
 	            }
 		        else {
 					cout<<"Database query failure rc:"<<rc<<endl;
+					sqlite3_finalize(pStmt);
 					exit(EXIT_FAILURE);
 		        }
 	        }
