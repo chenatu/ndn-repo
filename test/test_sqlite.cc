@@ -31,15 +31,27 @@ int main(int argc, char **argv) {
 
     Name name("/a/b/c/d/1");
 
-    //Data data(name);
-    //data.setFreshnessPeriod(2000); // 10 sec
-    //data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
-    //keyChain.sign(data);
-    //cout<<"data size: "<<data.wireEncode().size()<<endl;
-    //cout<<data.wireEncode().wire()<<endl;
+    Data data(name);
+    data.setFreshnessPeriod(2000); // 10 sec
+    data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
+    keyChain.sign(data);
+    cout<<"data size: "<<data.wireEncode().size()<<endl;
+    cout<<data.wireEncode().wire()<<endl;
+
+
+
+    Name name2("/a/b/c/d/2");
+
+    Data data2(name2);
+    data2.setFreshnessPeriod(2000); // 10 sec
+    data2.setContent((const uint8_t*)"HELLO DOGGY", sizeof("HELLO DOGGY"));
+    keyChain.sign(data2);
+    cout<<"data2 size: "<<data2.wireEncode().size()<<endl;
+    cout<<data2.wireEncode().wire()<<endl;
     
     Data newdata;
-    //handle.insert_data(name, data);
+    handle.insert_data(name, data);
+    handle.insert_data(name2, data2);
     handle.check_data(name, newdata);
     cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     cout<<newdata.wireEncode().wire()<<endl;

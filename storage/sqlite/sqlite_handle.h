@@ -23,11 +23,17 @@ public:
 	virtual int check_data(Name& name, Data& data);
 	//If has the name in database, return 1, else return 0
 	int check_name(Name& name);
+	//If has the pname in database, return 1, else return 0
+	int check_pname(Name& pname);
 private:
 	//sort the names in canonical order
-	void sort_data(vector<Data>& datas);
+	void sort_data_small(vector<Data>& datas);
 	//compare data with the name of the data in canonical order
-	static bool compare_data(Data data1, Data data2);
+	static bool compare_data_small(Data data1, Data data2);
+	//sort the names in reverse canonical order
+	void sort_data_big(vector<Data>& datas);
+	//compare data with the name of the data in reverse canonical order
+	static bool compare_data_big(Data data1, Data data2);
 	//This is for name and data database
 	sqlite3 *db;
 	//db and index will be in the same directory

@@ -9,7 +9,7 @@ sqlite_handle::sqlite_handle(){
 	if(rc == SQLITE_OK){
 		char *zErrMsg = 0;
 		//The name is without component version and segment, The data is the whole Class Data containg name, digest and other component
-		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB);"
+		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB, childnum INTEGER);"
 			, NULL, 0, &zErrMsg);
 
 
@@ -36,12 +36,13 @@ sqlite_handle::sqlite_handle(){
 	        }
 	        else if (rc == SQLITE_DONE) {
 	        	sqlite3_stmt* p2Stmt = NULL;
-	        	sql = string("INSERT INTO NDN_REPO (name, data, pname) VALUES (?, ?, ?);");
+	        	sql = string("INSERT INTO NDN_REPO (name, data, pname, childnum) VALUES (?, ?, ?, ?);");
 	        	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &p2Stmt, NULL);
 	        	if(rc == SQLITE_OK){
 		        	if (sqlite3_bind_blob(p2Stmt, 1, rootname.wireEncode().wire(), rootname.wireEncode().size(), NULL) == SQLITE_OK && 
 		        		sqlite3_bind_blob(p2Stmt, 2, NULL, 0, NULL) == SQLITE_OK &&
-		        		sqlite3_bind_blob(p2Stmt, 3, rootname.wireEncode().wire(), rootname.wireEncode().size(), NULL) == SQLITE_OK){
+		        		sqlite3_bind_blob(p2Stmt, 3, NULL, 0, NULL) == SQLITE_OK &&
+		        		sqlite3_bind_int(p2Stmt, 4, 0) == SQLITE_OK){
 						rc = sqlite3_step(p2Stmt);
 						if(rc != SQLITE_ROW && rc != SQLITE_DONE){
 							cout<<"Root name insert failure rc:"<<rc<<endl;
@@ -82,7 +83,7 @@ sqlite_handle::sqlite_handle(string dbpath){
 	}
 	if(rc == SQLITE_OK){
 		char *zErrMsg = 0;
-		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB);"
+		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB, childnum INTEGER);"
 			, NULL, 0, &zErrMsg);
 		if(rc != SQLITE_OK){
 			cout<<zErrMsg<<" rc:"<<rc<<endl;
@@ -107,12 +108,13 @@ sqlite_handle::sqlite_handle(string dbpath){
 	        }
 	        else if (rc == SQLITE_DONE) {
 	        	sqlite3_stmt* p2Stmt = NULL;
-	        	sql = string("INSERT INTO NDN_REPO (name, data, pname) VALUES (?, ?, ?);");
+	        	sql = string("INSERT INTO NDN_REPO (name, data, pname, childnum) VALUES (?, ?, ?, ?);");
 	        	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &p2Stmt, NULL);
 	        	if(rc == SQLITE_OK){
 		        	if (sqlite3_bind_blob(p2Stmt, 1, rootname.wireEncode().wire(), rootname.wireEncode().size(), NULL) == SQLITE_OK && 
 		        		sqlite3_bind_blob(p2Stmt, 2, NULL, 0, NULL) == SQLITE_OK &&
-		        		sqlite3_bind_blob(p2Stmt, 3, rootname.wireEncode().wire(), rootname.wireEncode().size(), NULL) == SQLITE_OK){
+		        		sqlite3_bind_blob(p2Stmt, 3, NULL, 0, NULL) == SQLITE_OK &&
+		        		sqlite3_bind_int(p2Stmt, 4, 0) == SQLITE_OK){
 						rc = sqlite3_step(p2Stmt);;
 						if(rc != SQLITE_ROW && rc != SQLITE_DONE){
 							cout<<"Root name insert failure rc:"<<rc<<endl;
@@ -150,7 +152,9 @@ sqlite_handle::~sqlite_handle(){
 
 int sqlite_handle::insert_data(Name& name, Data &data){
 	sqlite3_stmt* piStmt = NULL;
-	string insert_sql = string("INSERT INTO NDN_REPO (name, data, pname) VALUES (?, ?, ?);");
+	sqlite3_stmt* puStmt = NULL;
+	string insert_sql = string("INSERT INTO NDN_REPO (name, data, pname, childnum) VALUES (?, ?, ?, ?);");
+	string update_sql = string("UPDATE NDN_REPO SET childnum = childnum + 1 WHERE name = ?;");
 	Name rootname;
 
 	int rc = 0;
@@ -176,7 +180,8 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 			grandname = parentname.getPrefix(-1);			
 			if (sqlite3_bind_blob(piStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK && 
 			    sqlite3_bind_blob(piStmt, 2, NULL, 0, NULL) == SQLITE_OK &&
-			    sqlite3_bind_blob(piStmt, 3, grandname.wireEncode().wire(), grandname.wireEncode().size(), NULL) == SQLITE_OK){	
+			    sqlite3_bind_blob(piStmt, 3, grandname.wireEncode().wire(), grandname.wireEncode().size(), NULL) == SQLITE_OK &&
+			    sqlite3_bind_int(piStmt, 4, 1) == SQLITE_OK){	
 				rc = sqlite3_step(piStmt);
 				if(rc == SQLITE_CONSTRAINT){
 					cout<<"Insert parent prefix failed"<<endl;
@@ -189,14 +194,31 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 		}
 	}
 
+	// The parent childnum + 1
+	if(sqlite3_prepare_v2(db, update_sql.c_str(), -1, &puStmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(puStmt);
+		cout<<"update sql not prepared"<<endl;
+	}
+
+	if(sqlite3_bind_blob(puStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){
+		rc = sqlite3_step(puStmt);
+		if(rc != SQLITE_ROW && rc != SQLITE_DONE){
+			cout<<"update error rc:"<<rc<<endl;
+			sqlite3_finalize(puStmt);
+			sqlite3_finalize(piStmt);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	//Insert the name and the data
 	parentname = childname.getPrefix(-1);
 	sqlite3_reset(piStmt);
 	if (sqlite3_bind_blob(piStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK && 
 		sqlite3_bind_blob(piStmt, 2, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK &&
-		sqlite3_bind_blob(piStmt, 3, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){ 
+		sqlite3_bind_blob(piStmt, 3, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK &&
+		sqlite3_bind_int(piStmt, 4, 0) == SQLITE_OK){ 
 		rc = sqlite3_step(piStmt);
-		cout<<"insert the data: "<<data.wireEncode().wire()<<endl;
+		//cout<<"insert the data: "<<data.wireEncode().wire()<<endl;
 		if(rc == SQLITE_CONSTRAINT){
         	cout<<"The name of the data has existed!"<<endl;
         	sqlite3_finalize(piStmt);
@@ -236,36 +258,87 @@ int sqlite_handle::delete_data(Name& name){
 //This function is the first version of data check following longest prefix match. 
 int sqlite_handle::check_data(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
+	sqlite3_stmt* ppStmt = NULL;
+	//string sql = string("select * from NDN_REPO where name = ?;");
 	string sql = string("select * from NDN_REPO where name = ?;");
-	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	string sql_parent = string("select * from NDN_REPO where pname = ?;");
+	int rc = sqlite3_prepare_v2(db, sql_parent.c_str(), -1, &ppStmt, NULL);
 	vector<Data> vdata;
+	Name tmpname = name;
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK){
-	        while (1) {
-	            rc = sqlite3_step(pStmt);
-	            if (rc == SQLITE_ROW) {
-	            	Data edata;
-	            	//data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
-	            	edata.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
-	            	vdata.push_back(edata);
-
-	            }
-	            else if (rc == SQLITE_DONE) {
-	               	break;
-	            }
-		        else {
-					cout<<"Database query failure rc:"<<rc<<endl;
-					sqlite3_finalize(pStmt);
-					exit(EXIT_FAILURE);
+		while(check_pname(tmpname)){
+			if (sqlite3_bind_blob(ppStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+		        while (1) {
+		            rc = sqlite3_step(ppStmt);
+		            if (rc == SQLITE_ROW) {
+		            	Data edata;
+		            	//data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+		            	edata.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+		            	vdata.push_back(edata);
+		            }
+		            else if (rc == SQLITE_DONE) {
+		               	break;
+		            }
+			        else {
+						cout<<"Database parent query failure rc:"<<rc<<endl;
+						sqlite3_finalize(ppStmt);
+						exit(EXIT_FAILURE);
+			        }
 		        }
-	        }
-	    }
-	    sort_data(vdata);
-	    data.wireDecode(vdata.begin()->wireEncode());
-	    cout<<"check_data size: "<<data.wireEncode().size()<<endl;
-	    cout<<"name: "<<data.getName()<<endl;
-    	cout<<data.wireEncode().wire()<<endl;
-	    sqlite3_finalize(pStmt);
+		    } else{
+		    	cout<<"Database parent bind failure rc:"<<rc<<endl;
+				sqlite3_finalize(ppStmt);
+				exit(EXIT_FAILURE);
+		    }
+		    sqlite3_reset(ppStmt);
+		    //here use sort data, but sort name may be faster. It can be updatated later
+		    sort_data_small(vdata);
+		    tmpname = vdata.begin()->getName();
+		    vdata.clear();
+		}
+
+		sqlite3_finalize(ppStmt);
+
+
+		rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+		if(rc == SQLITE_OK){
+			if (sqlite3_bind_blob(pStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+				while (1) {
+		            rc = sqlite3_step(pStmt);
+		            if (rc == SQLITE_ROW) {
+		            	Data edata;
+		            	//data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+		            	edata.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+		            	vdata.push_back(edata);
+		            }
+		            else if (rc == SQLITE_DONE) {
+		               	break;
+		            }
+			        else {
+						cout<<"Database query failure rc:"<<rc<<endl;
+						sqlite3_finalize(pStmt);
+						exit(EXIT_FAILURE);
+			        }
+			    }
+			}
+			sort_data_small(vdata);
+			if(vdata.begin()->getContent().empty()){
+				cout<<"no such data"<<tmpname<<endl;
+			}
+		    data.wireDecode(vdata.begin()->wireEncode());
+		    /*cout<<"check_data size: "<<data.wireEncode().size()<<endl;
+		    cout<<"name: "<<data.getName()<<endl;*/
+	    	cout<<data.wireEncode().wire()<<endl;
+		    sqlite3_finalize(pStmt);
+		} else{
+			cout<<"pStmt prepared failed rc:"<<rc<<endl;
+			sqlite3_finalize(pStmt);
+			exit(EXIT_FAILURE);
+		}	    
+	} else{
+		cout<<"ppStmt prepared failed rc:"<<rc<<endl;
+		sqlite3_finalize(ppStmt);
+		exit(EXIT_FAILURE);
 	}  
 	return 0;
 }
@@ -297,10 +370,44 @@ int sqlite_handle::check_name(Name& name){
 	return 1;
 }
 
-void sqlite_handle::sort_data(vector<Data>& datas){
-	sort(datas.begin(), datas.end(), sqlite_handle::compare_data);
+//This is the exact name qeury in database.
+int sqlite_handle::check_pname(Name& pname){
+	sqlite3_stmt* pStmt = NULL;
+	string sql = string("select * from NDN_REPO where pname = ?;");
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	if(rc == SQLITE_OK){
+		if (sqlite3_bind_blob(pStmt, 1, pname.wireEncode().wire(), pname.wireEncode().size(), NULL) == SQLITE_OK){
+	        rc = sqlite3_step(pStmt);
+	        if (rc == SQLITE_ROW) {
+	        	sqlite3_finalize(pStmt);
+	            return 1;
+	        }
+	        else if (rc == SQLITE_DONE) {
+	            return 0;
+	        }
+		    else {
+				cout<<"Database query failure rc:"<<rc<<endl;
+				sqlite3_finalize(pStmt);
+				return 0;
+		    }
+	    }  
+	    sqlite3_finalize(pStmt);
+	}  
+	return 1;
 }
 
-bool sqlite_handle::compare_data(Data data1, Data data2){
+void sqlite_handle::sort_data_small(vector<Data>& datas){
+	sort(datas.begin(), datas.end(), sqlite_handle::compare_data_small);
+}
+
+bool sqlite_handle::compare_data_small(Data data1, Data data2){
+	return (data1.getName()<data2.getName());
+}
+
+void sqlite_handle::sort_data_big(vector<Data>& datas){
+	sort(datas.begin(), datas.end(), sqlite_handle::compare_data_big);
+}
+
+bool sqlite_handle::compare_data_big(Data data1, Data data2){
 	return (data1.getName()<data2.getName());
 }
