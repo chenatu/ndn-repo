@@ -151,6 +151,15 @@ sqlite_handle::~sqlite_handle(){
 //Temporarily assigned the datatype of every component. needs to be further discussed
 
 int sqlite_handle::insert_data(Name& name, Data &data){
+	if(check_name(name)){
+		cout<<"The name has existed"<<endl;
+		return 0;
+	}
+	if(name.empty()){
+		cout<<"name is empty"<<endl;
+		return 0;
+	}
+
 	sqlite3_stmt* piStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
 	string insert_sql = string("INSERT INTO NDN_REPO (name, data, pname, childnum) VALUES (?, ?, ?, ?);");
@@ -162,21 +171,17 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 		sqlite3_finalize(piStmt);
 		cout<<"insert sql not prepared"<<endl;
 	}
-	//Insert and check the prefix
-	Name childname = Name(name);
-	Name parentname;
-	Name grandname;
-	if(!name.empty()){
-		parentname = childname.getPrefix(-1);
-	}else{
-		cout<<"name is empty"<<endl;
-		return 0;
+	if(sqlite3_prepare_v2(db, update_sql.c_str(), -1, &puStmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(puStmt);
+		cout<<"update sql not prepared"<<endl;
+		exit(EXIT_FAILURE);
 	}
-	while(!check_name(parentname)){
-		if(parentname.empty()){
-			cout<<"loop break"<<endl;
-			break;
-		}else{
+	//Insert and check the prefix
+	Name parentname = name;
+	Name grandname;
+	do{
+		parentname = parentname.getPrefix(-1);
+		if(!check_name(parentname)){
 			grandname = parentname.getPrefix(-1);			
 			if (sqlite3_bind_blob(piStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK && 
 			    sqlite3_bind_blob(piStmt, 2, NULL, 0, NULL) == SQLITE_OK &&
@@ -190,28 +195,23 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 				}
 				sqlite3_reset(piStmt);
 			}
-			parentname = grandname;
+		}else{
+			if(sqlite3_bind_blob(puStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){
+				rc = sqlite3_step(puStmt);
+				if(rc != SQLITE_ROW && rc != SQLITE_DONE){
+					cout<<"update error rc:"<<rc<<endl;
+					sqlite3_finalize(puStmt);
+					sqlite3_finalize(piStmt);
+					exit(EXIT_FAILURE);
+				}
+				sqlite3_reset(puStmt);
+			}
 		}
-	}
+	}while(!parentname.empty());
 
-	// The parent childnum + 1
-	if(sqlite3_prepare_v2(db, update_sql.c_str(), -1, &puStmt, NULL) != SQLITE_OK){
-		sqlite3_finalize(puStmt);
-		cout<<"update sql not prepared"<<endl;
-	}
-
-	if(sqlite3_bind_blob(puStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){
-		rc = sqlite3_step(puStmt);
-		if(rc != SQLITE_ROW && rc != SQLITE_DONE){
-			cout<<"update error rc:"<<rc<<endl;
-			sqlite3_finalize(puStmt);
-			sqlite3_finalize(piStmt);
-			exit(EXIT_FAILURE);
-		}
-	}
 
 	//Insert the name and the data
-	parentname = childname.getPrefix(-1);
+	parentname = name.getPrefix(-1);
 	sqlite3_reset(piStmt);
 	if (sqlite3_bind_blob(piStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK && 
 		sqlite3_bind_blob(piStmt, 2, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK &&
@@ -225,6 +225,7 @@ int sqlite_handle::insert_data(Name& name, Data &data){
         	return 0;
 		}
 	}
+	sqlite3_finalize(puStmt);
 	sqlite3_finalize(piStmt);
 	return 1;
 }
@@ -232,27 +233,116 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 
 
 int sqlite_handle::delete_data(Name& name){
-	sqlite3_stmt* pStmt = NULL;
-	string sql = string("DELETE from NDN_REPO where name = ?;");
-	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	sqlite3_stmt* pqStmt = NULL;
+	sqlite3_stmt* pdStmt = NULL;
+	sqlite3_stmt* puStmt = NULL;
+	string sql_query = string("SELECT * from NDN_REPO where name = ?;");
+	string sql_delete = string("DELETE from NDN_REPO where name = ?;");
+	string sql_update = string("UPDATE NDN_REPO SET childnum = childnum - 1 WHERE name = ?;");
+	int rc = sqlite3_prepare_v2(db, sql_query.c_str(), -1, &pqStmt, NULL);
+	Name tmpname = name;
+	int childnum;
+	if(sqlite3_prepare_v2(db, sql_delete.c_str(), -1, &pdStmt, NULL) != SQLITE_OK){
+	    sqlite3_finalize(pdStmt);
+	    cout<<"delete statement prepared failed"<<endl;
+	    exit(EXIT_FAILURE);
+	}
+	if(sqlite3_prepare_v2(db, sql_update.c_str(), -1, &puStmt, NULL) != SQLITE_OK){
+	    sqlite3_finalize(puStmt);
+	    cout<<"delete update prepared failed"<<endl;
+	    exit(EXIT_FAILURE);
+	}
 	if(rc == SQLITE_OK){
-		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK) {
-        	while(1){
-            	rc = sqlite3_step(pStmt); 
-            	if (rc == SQLITE_DONE) {
-                	break;
-            	}else {
-					cout<<"Database delete failure rc:"<<rc<<endl;
-					exit(EXIT_FAILURE);
-				}
-            }
-        }  
-        sqlite3_finalize(pStmt);   
+		if (sqlite3_bind_blob(pqStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+	        rc = sqlite3_step(pqStmt);
+	        if (rc == SQLITE_ROW) {
+	        	childnum = sqlite3_column_int(pqStmt, 3);
+	        }
+		    else {
+				cout<<"Database query no such name or failure rc:"<<rc<<endl;
+				sqlite3_finalize(pqStmt);
+				return 0;
+		    }
+	    }
+	    if(childnum > 0){
+	    	cout<<"This is internal node which cannot be deleted"<<endl;
+	    	sqlite3_finalize(pqStmt);
+			return 0;
+	    }else{
+	    	//Delete the leaf node
+	    	if(sqlite3_bind_blob(pdStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+			    rc = sqlite3_step(pdStmt);
+			  	if(rc != SQLITE_DONE && rc !=SQLITE_ROW){
+			   		cout<<"leaf node delete error rc:"<<rc<<endl;
+			   		sqlite3_finalize(pdStmt);
+		    		exit(EXIT_FAILURE);
+		   		}
+		   	}else{
+		  		cout<<"delete bind error"<<endl;
+			   	sqlite3_finalize(pdStmt);
+		    	exit(EXIT_FAILURE);
+		    }
+		    sqlite3_reset(pdStmt);
+	    }
+
+	    sqlite3_reset(pqStmt);
+
+	    do{
+	    	tmpname = tmpname.getPrefix(-1);
+	    	if (sqlite3_bind_blob(pqStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+	        	rc = sqlite3_step(pqStmt);
+		        if (rc == SQLITE_ROW) {
+		        	childnum = sqlite3_column_int(pqStmt, 3);
+		        }else {
+					cout<<"Database query no such name or failure rc:"<<rc<<endl;
+					sqlite3_finalize(pqStmt);
+					return 0;
+			    }
+			    if(childnum == 1 && !tmpname.empty()){
+			    	//Delete this internal node
+			    	if(sqlite3_bind_blob(pdStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+			    		rc = sqlite3_step(pdStmt);
+			    		if(rc != SQLITE_DONE && rc !=SQLITE_ROW){
+			    			cout<<"internal node delete error rc:"<<rc<<endl;
+			    			sqlite3_finalize(pdStmt);
+			    			exit(EXIT_FAILURE);
+			    		}
+			    	}else{
+			    		cout<<"delete bind error"<<endl;
+			    		sqlite3_finalize(pdStmt);
+			    		exit(EXIT_FAILURE);
+			    	}
+			    	sqlite3_reset(pdStmt);
+			    }else{
+			    	//childnum - 1
+			    	if(sqlite3_bind_blob(puStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+			    		rc = sqlite3_step(puStmt);
+			    		if(rc != SQLITE_DONE && rc !=SQLITE_ROW){
+			    			cout<<"internal node childnum update error rc:"<<rc<<endl;
+			    			sqlite3_finalize(puStmt);
+			    			exit(EXIT_FAILURE);
+			    		}
+			    	}else{
+			    		cout<<"update bind error"<<endl;
+			    		sqlite3_finalize(puStmt);
+			    		exit(EXIT_FAILURE);
+			    	}
+			    	sqlite3_reset(puStmt);
+			    }
+			}else{
+				cout<<"query bind error"<<endl;
+				sqlite3_finalize(pqStmt);
+				exit(EXIT_FAILURE);
+			}
+			sqlite3_reset(pqStmt);
+	    }while(!tmpname.empty());
+   
 	}else{
-		cout<<"Database delete statement failure rc:"<<rc<<endl;
+		cout<<"query prepared failure rc:"<<rc<<endl;
+		sqlite3_finalize(pqStmt);
 		exit(EXIT_FAILURE);
 	}
-	return 0;
+	return 1;
 }
 
 //This function is the first version of data check following longest prefix match. 

@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
 
 
     Name name2("/a/b/c/d/2");
+    Name name3("/a/b/c/d/3");
 
     Data data2(name2);
     data2.setFreshnessPeriod(2000); // 10 sec
@@ -61,7 +62,9 @@ int main(int argc, char **argv) {
     //handle.insert_data(prefix, data);
     //handle.check_data(prefix, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;
-    //handle.delete_data(name);
+    handle.delete_data(name);
+    handle.delete_data(name2);
+    handle.delete_data(name3);
     return 0;
 }
 
