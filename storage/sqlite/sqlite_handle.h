@@ -33,6 +33,10 @@ public:
 	int check_data_plain(Name& name, Data& data);
 	//This filter ckeck will filter data by name
 	int check_data_name(Name& name, vector<Name>& vname);
+	//MinSuffixComponents filter
+	int check_data_minsuffix(Name& name, int minSuffixComponents, vector<Name>& vname);
+	//MaxSuffixComponents filter
+	int check_data_maxsuffix(Name& name, int maxSuffixComponents, vector<Name>& vname);
 	//sort the names in canonical order
 	void sort_data_small(vector<Data>& datas);
 	//compare data with the name of the data in canonical order

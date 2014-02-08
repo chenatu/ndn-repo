@@ -526,6 +526,37 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 	}
 }
 
+int sqlite_handle::check_data_minsuffix(Name& name, int minSuffixComponents, vector<Name>& vname){
+	int mincomp = name.getComponentCount() + minSuffixComponents;
+	int last = 0;
+	for(int i=0; i<vname.size(); i++, last++)
+	{
+	   while(vname[i].getComponentCount() < mincomp)
+	      i++;
+	   if(i >= vname.size()) break;
+
+	   vname[last] = vname[i];   
+	}
+	vname.resize(last);
+	return 1;
+}
+
+int sqlite_handle::check_data_maxsuffix(Name& name, int maxSuffixComponents, vector<Name>& vname){
+	int mincomp = name.getComponentCount() + maxSuffixComponents;
+	int last = 0;
+	for(int i=0; i<vname.size(); i++, last++)
+	{
+	   while(vname[i].getComponentCount() > mincomp)
+	      i++;
+	   if(i >= vname.size()) break;
+
+	   vname[last] = vname[i];   
+	}
+	vname.resize(last);
+	return 1;
+}
+
+
 //This is the exact name qeury in database.
 int sqlite_handle::check_name(Name& name){
 	sqlite3_stmt* pStmt = NULL;

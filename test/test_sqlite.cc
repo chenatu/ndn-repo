@@ -82,6 +82,13 @@ int main(int argc, char **argv) {
     for(iter = vname.begin(); iter != vname.end(); iter++){
         cout<<"vname:"<<iter->wireEncode().wire()<<endl;
     }
+
+    handle.check_data_minsuffix(name4, 3, vname);
+
+    for(iter = vname.begin(); iter != vname.end(); iter++){
+        cout<<"vname:"<<iter->wireEncode().wire()<<endl;
+    }
+
     return 0;
 }
 
