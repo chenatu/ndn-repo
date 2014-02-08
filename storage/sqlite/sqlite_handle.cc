@@ -196,19 +196,22 @@ int sqlite_handle::insert_data(Name& name, Data &data){
 				sqlite3_reset(piStmt);
 			}
 		}else{
-			if(sqlite3_bind_blob(puStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){
-				rc = sqlite3_step(puStmt);
-				if(rc != SQLITE_ROW && rc != SQLITE_DONE){
-					cout<<"update error rc:"<<rc<<endl;
-					sqlite3_finalize(puStmt);
-					sqlite3_finalize(piStmt);
-					exit(EXIT_FAILURE);
-				}
-				sqlite3_reset(puStmt);
-			}
+			break;
 		}
 	}while(!parentname.empty());
 
+	//The existed parent childnum + 1
+
+	if(sqlite3_bind_blob(puStmt, 1, parentname.wireEncode().wire(), parentname.wireEncode().size(), NULL) == SQLITE_OK){
+		rc = sqlite3_step(puStmt);
+		if(rc != SQLITE_ROW && rc != SQLITE_DONE){
+			cout<<"update error rc:"<<rc<<endl;
+			sqlite3_finalize(puStmt);
+			sqlite3_finalize(piStmt);
+			exit(EXIT_FAILURE);
+		}
+		sqlite3_reset(puStmt);
+	}
 
 	//Insert the name and the data
 	parentname = name.getPrefix(-1);
@@ -328,6 +331,7 @@ int sqlite_handle::delete_data(Name& name){
 			    		exit(EXIT_FAILURE);
 			    	}
 			    	sqlite3_reset(puStmt);
+			    	break;
 			    }
 			}else{
 				cout<<"query bind error"<<endl;
@@ -345,8 +349,13 @@ int sqlite_handle::delete_data(Name& name){
 	return 1;
 }
 
-//This function is the first version of data check following longest prefix match. 
-int sqlite_handle::check_data(Name& name, Data& data){
+int sqlite_handle::check_data(const ptr_lib::shared_ptr<const Interest> &interest, Data& data){
+	Name name = interest->getName();
+	return check_data_plain(name, data);
+}
+
+//This function is the first version of data check following longest prefix match. It will return the leftmost data
+int sqlite_handle::check_data_plain(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
 	sqlite3_stmt* ppStmt = NULL;
 	//string sql = string("select * from NDN_REPO where name = ?;");
@@ -433,6 +442,89 @@ int sqlite_handle::check_data(Name& name, Data& data){
 	return 0;
 }
 
+//retrieve all the leaf nodes of a subtree
+int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
+	if(name.empty()){
+		cout<<"The name is empty"<<endl;
+		return 0;
+	}
+	sqlite3_stmt* pStmt = NULL;
+	sqlite3_stmt* ppStmt = NULL;
+	string sql = string("select * from NDN_REPO where name = ?;");
+	string psql = string("select * from NDN_REPO where pname = ?;");
+	Name tmpname = name;
+	//This queue is for internal node;
+	queue<Name> qname;
+	int childnum;
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	if(rc == SQLITE_OK){
+		if(sqlite3_bind_blob(pStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+			rc = sqlite3_step(pStmt);
+			if(rc == SQLITE_ROW){
+				childnum = sqlite3_column_int(pStmt, 3);
+				cout<<"tmpname:"<<tmpname<<endl;
+				cout<<"check_data_name childnum:"<<childnum<<endl;
+				if(childnum == 0){
+					Name ename;
+					ename.wireDecode(Block(sqlite3_column_blob(ppStmt, 0),sqlite3_column_bytes(ppStmt, 0)));
+					vname.push_back(ename);
+					sqlite3_finalize(pStmt);
+					return 1;
+				}
+			}else if(rc == SQLITE_DONE){
+				sqlite3_finalize(pStmt);
+				return 0;
+			}else{
+				cout<<"check error rc:"<<rc<<endl;
+				sqlite3_finalize(pStmt);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+
+	sqlite3_finalize(pStmt);
+
+	rc = sqlite3_prepare_v2(db, psql.c_str(), -1, &ppStmt, NULL);
+	qname.push(tmpname);
+	if(rc == SQLITE_OK){
+		do{
+			tmpname = qname.front();
+			qname.pop();
+			if(sqlite3_bind_blob(ppStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+				while(1){
+					rc = sqlite3_step(ppStmt);
+					if(rc == SQLITE_ROW){
+						Name ename;
+						ename.wireDecode(Block(sqlite3_column_blob(ppStmt, 0),sqlite3_column_bytes(ppStmt, 0)));
+						childnum = sqlite3_column_int(ppStmt, 3);
+						if(childnum > 0){
+							qname.push(ename);
+						}else{
+							vname.push_back(ename);
+						}
+					}else if(rc == SQLITE_DONE){
+						break;
+					}else{
+						cout<<"check error rc:"<<rc<<endl;
+						sqlite3_finalize(ppStmt);
+						exit(EXIT_FAILURE);
+					}
+				}
+				sqlite3_reset(ppStmt);
+			}else{
+				cout<<"bind error"<<endl;
+				sqlite3_finalize(ppStmt);
+				exit(EXIT_FAILURE);
+			}
+		}while(!qname.empty());
+		sqlite3_finalize(ppStmt);
+		return 1;
+	}else{
+		cout<<"pStmt prepared failed rc:"<<rc<<endl;
+		sqlite3_finalize(ppStmt);
+		exit(EXIT_FAILURE);
+	}
+}
 
 //This is the exact name qeury in database.
 int sqlite_handle::check_name(Name& name){

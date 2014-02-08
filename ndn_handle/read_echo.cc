@@ -8,7 +8,7 @@ void read_echo::operator()
   Name name = Name(interest->getName());
   Data data = Data(interest->getName());
 
-  p_handle_->check_data(name, data);
+  p_handle_->check_data(interest, data);
 
   //keyChain_.sign(data);
   

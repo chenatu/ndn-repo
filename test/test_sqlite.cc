@@ -6,6 +6,7 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 
 using namespace std;
+using namespace ndn;
 
 static const string ccnr_usage_message(
 "ndn_repo - NDNx Repository Daemon\n"
@@ -49,11 +50,18 @@ int main(int argc, char **argv) {
     keyChain.sign(data2);
     cout<<"data2 size: "<<data2.wireEncode().size()<<endl;
     cout<<data2.wireEncode().wire()<<endl;
+
+    ptr_lib::shared_ptr<Interest> interest(new Interest());
+    interest->setName(name);
+    interest->setScope(1);
+    interest->setInterestLifetime(1000);
+    interest->setMustBeFresh(true);
     
     Data newdata;
     handle.insert_data(name, data);
     handle.insert_data(name2, data2);
-    handle.check_data(name, newdata);
+
+    handle.check_data(interest, newdata);
     cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     cout<<newdata.wireEncode().wire()<<endl;
     //handle.insert_data(name, data);
@@ -62,9 +70,18 @@ int main(int argc, char **argv) {
     //handle.insert_data(prefix, data);
     //handle.check_data(prefix, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;
-    handle.delete_data(name);
-    handle.delete_data(name2);
-    handle.delete_data(name3);
+    //handle.delete_data(name);
+    //handle.delete_data(name2);
+    //handle.delete_data(name3);
+
+    vector<Name> vname;
+    Name name4("/a/b");
+    handle.check_data_name(name4, vname);
+
+    vector<Name>::iterator iter;
+    for(iter = vname.begin(); iter != vname.end(); iter++){
+        cout<<"vname:"<<iter->wireEncode().wire()<<endl;
+    }
     return 0;
 }
 
