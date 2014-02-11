@@ -349,9 +349,37 @@ int sqlite_handle::delete_data(Name& name){
 	return 1;
 }
 
-int sqlite_handle::check_data(const ptr_lib::shared_ptr<const Interest> &interest, Data& data){
-	Name name = interest->getName();
-	return check_data_plain(name, data);
+int sqlite_handle::check_data(const Interest &interest, Data& data){
+	Name name = interest.getName();
+	vector<Name> vname;
+	Name resname;
+	if(!interest.hasSelectors()){
+		return check_data_plain(name, data);
+	}else{
+		check_data_name(name, vname);
+		if(interest.getMinSuffixComponents() >= 0){
+			if(!check_name_minsuffix(name, interest.getMinSuffixComponents(), vname))
+				return 0;
+		}
+		if(interest.getMaxSuffixComponents() >= 0){
+			if(!check_name_maxsuffix(name, interest.getMaxSuffixComponents(), vname))
+				return 0;
+		}
+		if(!interest.getExclude().empty()){
+			if(!check_name_exclude(name, interest.getExclude(), vname))
+				return 0;
+		}
+		if(interest.getChildSelector() >= 0){
+			if(!check_name_child(name, interest.getChildSelector(), vname, resname))
+				return 0;
+		}else{
+			if(!check_name_child(name, 0, vname, resname))
+				return 0;
+		}
+		return check_data(resname, data);
+	}
+
+
 }
 
 //This function is the first version of data check following longest prefix match. It will return the leftmost data
@@ -462,8 +490,6 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 			rc = sqlite3_step(pStmt);
 			if(rc == SQLITE_ROW){
 				childnum = sqlite3_column_int(pStmt, 3);
-				cout<<"tmpname:"<<tmpname<<endl;
-				cout<<"check_data_name childnum:"<<childnum<<endl;
 				if(childnum == 0){
 					Name ename;
 					ename.wireDecode(Block(sqlite3_column_blob(ppStmt, 0),sqlite3_column_bytes(ppStmt, 0)));
@@ -526,13 +552,14 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 	}
 }
 
-int sqlite_handle::check_data_minsuffix(Name& name, int minSuffixComponents, vector<Name>& vname){
-	int mincomp = name.getComponentCount() + minSuffixComponents;
+int sqlite_handle::check_name_minsuffix(Name& name, int minSuffixComponents, vector<Name>& vname){
+	int mincomp = name.size() + minSuffixComponents;
 	int last = 0;
-	for(int i=0; i<vname.size(); i++, last++)
-	{
-	   while(vname[i].getComponentCount() < mincomp)
+	for(int i=0; i<vname.size(); i++, last++){
+	   while(vname[i].size() < mincomp){
 	      i++;
+	      if(i >= vname.size()) break;
+	   }
 	   if(i >= vname.size()) break;
 
 	   vname[last] = vname[i];   
@@ -541,18 +568,83 @@ int sqlite_handle::check_data_minsuffix(Name& name, int minSuffixComponents, vec
 	return 1;
 }
 
-int sqlite_handle::check_data_maxsuffix(Name& name, int maxSuffixComponents, vector<Name>& vname){
-	int mincomp = name.getComponentCount() + maxSuffixComponents;
+int sqlite_handle::check_name_maxsuffix(Name& name, int maxSuffixComponents, vector<Name>& vname){
+	int mincomp = name.size() + maxSuffixComponents;
 	int last = 0;
-	for(int i=0; i<vname.size(); i++, last++)
-	{
-	   while(vname[i].getComponentCount() > mincomp)
+	for(int i=0; i<vname.size(); i++, last++){
+	   while(vname[i].size() > mincomp){
 	      i++;
+	      if(i >= vname.size()) break;
+	   }
 	   if(i >= vname.size()) break;
 
-	   vname[last] = vname[i];   
+	   vname[last] = vname[i];
 	}
 	vname.resize(last);
+	return 1;
+}
+
+int sqlite_handle::check_name_exclude(Name& name, const Exclude& exclude, vector<Name>& vname){
+	int exCompNum = name.size();
+	int last = 0;
+	for(int i=0; i<vname.size(); ++i, ++last){
+	   while(exclude.isExcluded(vname[i].get(exCompNum))){
+	      ++i;
+	      if(i >= vname.size()) break;
+	   }
+	   if(i >= vname.size()) break;
+
+	   vname[last] = vname[i];
+	}
+	vname.resize(last);
+	return 1;
+}
+
+
+int sqlite_handle::check_name_child(Name& name, int childselector, vector<Name>& vname, Name& resname){
+	if(childselector == 0){
+		sort_name_small(vname);
+		if(vname.size() > 0){
+			resname.wireDecode(vname[0].wireEncode());
+		}else{
+			return 0;
+		}
+	}else if(childselector == 1){
+		sort_name_big(vname);
+		if(vname.size() > 0){
+			resname.wireDecode(vname[0].wireEncode());
+		}else{
+			return 0;
+		}
+	}else{
+		return 0;
+	}
+	return 1;
+}
+
+int sqlite_handle::check_data(Name &name, Data& data){
+	sqlite3_stmt* pStmt = NULL;
+	string sql = string("select * from NDN_REPO where name = ?;");
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+	if(rc == SQLITE_OK){
+		if (sqlite3_bind_blob(pStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK){
+	        rc = sqlite3_step(pStmt);
+	        if (rc == SQLITE_ROW) {
+	        	data.wireDecode(Block(sqlite3_column_blob(pStmt, 1),sqlite3_column_bytes(pStmt, 1)));
+	        	sqlite3_finalize(pStmt);
+	            return 1;
+	        }
+	        else if (rc == SQLITE_DONE) {
+	            return 0;
+	        }
+		    else {
+				cout<<"Database query failure rc:"<<rc<<endl;
+				sqlite3_finalize(pStmt);
+				exit(EXIT_FAILURE);
+		    }
+	    }  
+	    sqlite3_finalize(pStmt);
+	}  
 	return 1;
 }
 
@@ -622,5 +714,21 @@ void sqlite_handle::sort_data_big(vector<Data>& datas){
 }
 
 bool sqlite_handle::compare_data_big(Data data1, Data data2){
-	return (data1.getName()<data2.getName());
+	return (data1.getName()>data2.getName());
+}
+
+void sqlite_handle::sort_name_small(vector<Name>& names){
+	sort(names.begin(), names.end(), sqlite_handle::compare_name_small);
+}
+
+bool sqlite_handle::compare_name_small(Name name1, Name name2){
+	return (name1 < name2);
+}
+
+void sqlite_handle::sort_name_big(vector<Name>& names){
+	sort(names.begin(), names.end(), sqlite_handle::compare_name_big);
+}
+
+bool sqlite_handle::compare_name_big(Name name1, Name name2){
+	return (name1 > name2);
 }

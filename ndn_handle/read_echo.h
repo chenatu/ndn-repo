@@ -13,10 +13,10 @@ public:
   }
   
   // onInterest. Read the name from database
-  void operator()(const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest);
+  void operator()(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
-  void operator()(const ptr_lib::shared_ptr<const Name>& prefix);
+  void operator()(const Name& prefix, const std::string& reason);
   const RegisteredPrefixId *id_;
 
 private:

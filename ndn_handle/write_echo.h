@@ -8,10 +8,10 @@ public:
   write_echo(Face face, storage_handle* p_handle);
   
   // onInterest.
-  void operator()(const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest);
+  void operator()(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
-  void operator()(const ptr_lib::shared_ptr<const Name>& prefix);
+  void operator()(const Name& prefix, const std::string& reason);
 
 private:
   KeyChain keyChain_;

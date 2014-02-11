@@ -2,11 +2,11 @@
 
 // Interest.
 void read_echo::operator()
-(const ptr_lib::shared_ptr<const Name>& prefix, const ptr_lib::shared_ptr<const Interest>& interest) {
-  std::cout << "<< I: " << interest->getName() << std::endl;
+(const Name& prefix, const Interest& interest) {
+  std::cout << "<< I: " << interest.getName() << std::endl;
 
-  Name name = Name(interest->getName());
-  Data data = Data(interest->getName());
+  Name name = Name(interest.getName());
+  Data data = Data(interest.getName());
 
   p_handle_->check_data(interest, data);
 
@@ -18,7 +18,7 @@ void read_echo::operator()
 }
 
 // onRegisterFailed.
-void read_echo::operator()(const ptr_lib::shared_ptr<const Name>& prefix){
+void read_echo::operator()(const Name& prefix, const std::string& reason){
   std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
   face_.shutdown();
 }

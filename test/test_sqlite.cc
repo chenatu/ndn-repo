@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
 
     Name name2("/a/b/c/d/2");
-    Name name3("/a/b/c/d/3");
+    //Name name3("/a/b/c/d/3");
 
     Data data2(name2);
     data2.setFreshnessPeriod(2000); // 10 sec
@@ -50,17 +50,17 @@ int main(int argc, char **argv) {
     keyChain.sign(data2);
     cout<<"data2 size: "<<data2.wireEncode().size()<<endl;
     cout<<data2.wireEncode().wire()<<endl;
-
-    ptr_lib::shared_ptr<Interest> interest(new Interest());
-    interest->setName(name);
-    interest->setScope(1);
-    interest->setInterestLifetime(1000);
-    interest->setMustBeFresh(true);
-    
+    Name name3("/a/b");
+    Interest interest;
+    interest.setName(name3);
+    Exclude exclude;
+    Name::Component comp = name.get(3);
+    exclude.appendExclude(comp, 0);
+    interest.setExclude(exclude);
+    interest.setChildSelector(1);
     Data newdata;
     handle.insert_data(name, data);
     handle.insert_data(name2, data2);
-
     handle.check_data(interest, newdata);
     cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     cout<<newdata.wireEncode().wire()<<endl;
@@ -74,20 +74,14 @@ int main(int argc, char **argv) {
     //handle.delete_data(name2);
     //handle.delete_data(name3);
 
-    vector<Name> vname;
+    /*vector<Name> vname;
     Name name4("/a/b");
     handle.check_data_name(name4, vname);
 
     vector<Name>::iterator iter;
     for(iter = vname.begin(); iter != vname.end(); iter++){
         cout<<"vname:"<<iter->wireEncode().wire()<<endl;
-    }
-
-    handle.check_data_minsuffix(name4, 3, vname);
-
-    for(iter = vname.begin(); iter != vname.end(); iter++){
-        cout<<"vname:"<<iter->wireEncode().wire()<<endl;
-    }
+    }*/
 
     return 0;
 }

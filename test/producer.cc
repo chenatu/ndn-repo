@@ -6,39 +6,27 @@
  */
 
 // correct way to include NDN-CPP headers
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
+ #include <ndn-cpp-dev/face.hpp>
+ #include <ndn-cpp-dev/security/key-chain.hpp>
 
 //#include "face.hpp"
 //#include "security/key-chain.hpp"
-
-#if NDN_CPP_HAVE_CXX11
-// In the std library, the placeholders are in a different namespace than boost.
-using namespace ndn::func_lib::placeholders;
-#endif
 
 using namespace ndn;
 
 class Producer
 {
 public:
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // CREATE TEST KEYCHAIN (THIS CODE IS ONLY FOR DEBUGGING, NOT TO BE USED IN REAL APPS //
-  ////////////////////////////////////////////////////////////////////////////////////////
   Producer()
-    : keyChain_()
   {
   }
-  ////////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////////////
 
   void
-  onInterest(const ptr_lib::shared_ptr<const Name> &name, const ptr_lib::shared_ptr<const Interest> &interest)
+  onInterest(const Name& name, const Interest& interest)
   {
-    std::cout << "<< I: " << *interest << std::endl;
+    std::cout << "<< I: " << interest << std::endl;
     
-    ndn::Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
+    ndn::Data data(ndn::Name(interest.getName()).append("testApp").appendVersion());
     data.setFreshnessPeriod(1000); // 10 sec
 
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
@@ -49,11 +37,12 @@ public:
     face_.put(data);
   }
 
+
   void
-  onRegisterFailed(const ptr_lib::shared_ptr<const Name>&)
+  onRegisterFailed (const ndn::Name& prefix, const std::string& reason)
   {
-    std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
-    face_.shutdown();
+    std::cerr << "ERROR: Failed to register prefix in local hub's daemon (" << reason << ")" << std::endl;
+    face_.shutdown ();
   }
   
   void
@@ -61,7 +50,7 @@ public:
   {
     face_.setInterestFilter("/localhost/testApp",
                             func_lib::bind(&Producer::onInterest, this, _1, _2),
-                            func_lib::bind(&Producer::onRegisterFailed, this, _1));
+                            func_lib::bind(&Producer::onRegisterFailed, this, _1, _2));
     face_.processEvents();
   }
 
