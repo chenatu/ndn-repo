@@ -10,6 +10,7 @@
 #include <ndn-cpp-dev/face.hpp>
 //#include <ndn-cpp-dev/status-response.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
+#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
 #include "../storage/storage_handle.h"
 

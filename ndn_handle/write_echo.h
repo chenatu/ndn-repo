@@ -5,20 +5,19 @@
 
 class write_echo{
 public:
-  write_echo(Face face, storage_handle* p_handle);
+  write_echo(Face face, storage_handle* p_handle, CommandInterestValidator validator);
   
   // onInterest.
   void operator()(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
   void operator()(const Name& prefix, const std::string& reason);
-
+  void validated(const shared_ptr<const Interest>& interest);
+  void validationFailed(const shared_ptr<const Interest>& interest);
 private:
-  KeyChain keyChain_;
   Face face_;
-  Buffer ndndId_;
-
-  Data responseinfo;
+  CommandInterestValidator validator_;
+  int validres;
 
   storage_handle* p_handle_;
 };

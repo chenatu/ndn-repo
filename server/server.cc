@@ -6,6 +6,8 @@
 
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
+#include <ndn-cpp-dev/helper/command-interest-generator.hpp>
+#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
 #include "../storage/storage_handle.h"
 #include "../storage/sqlite/sqlite_handle.h"
@@ -40,12 +42,18 @@ int main(int argc, char **argv) {
 //copy from ndn-ccp testfile
     try {
         Face face;
-
-        read_echo echo(face, p_handle);
-
+        read_echo recho(face, p_handle);
         Name prefix("/a/b/c/d");
         cout << "Register prefix  " << prefix.toUri() << endl;
-        face.setInterestFilter(prefix, func_lib::ref(echo), func_lib::ref(echo));
+        face.setInterestFilter(prefix, func_lib::ref(recho), func_lib::ref(recho));
+
+        //validation set up
+        KeyChain keyChain;
+        CommandInterestValidator validator;
+        validator.addInterestRule("^<TestCommandInterest><Validation>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
+        cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
+
+        write_echo wecho(face, p_handle, validator);
 
         face.processEvents();
     } catch (std::exception& e) {
