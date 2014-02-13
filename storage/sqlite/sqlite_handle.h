@@ -19,7 +19,7 @@ public:
 	sqlite_handle();
 	sqlite_handle(string dbpath);
 	~sqlite_handle();
-	virtual int insert_data(Name& name, Data &data);
+	virtual int insert_data(const Interest& interest, Data &data);
 	virtual int delete_data(Name& name);
 	//The simpliest check that to check the specific version and segment
 	virtual int check_data(const Interest& interest, Data& data);

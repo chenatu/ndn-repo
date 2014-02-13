@@ -150,7 +150,8 @@ sqlite_handle::~sqlite_handle(){
 
 //Temporarily assigned the datatype of every component. needs to be further discussed
 
-int sqlite_handle::insert_data(Name& name, Data &data){
+int sqlite_handle::insert_data(const Interest& interest, Data& data){
+	Name name = data.getName();
 	if(check_name(name)){
 		cout<<"The name has existed"<<endl;
 		return 0;

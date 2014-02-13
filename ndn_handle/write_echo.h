@@ -15,9 +15,9 @@ public:
   void validated(const shared_ptr<const Interest>& interest);
   void validationFailed(const shared_ptr<const Interest>& interest);
   // Ask for Data insertation and when data comes
-  static void onData(ndn::Face &face, const Interest& interest, Data& data);
+  void onData(ndn::Face &face, const Interest& interest, Data& data);
   // Ask for Data insertation and when data timeout
-  static void onTimeout(ndn::Face &face, const Interest& interest);
+  void onTimeout(ndn::Face &face, const Interest& interest);
 private:
   Face *face_;
   CommandInterestValidator validator_;
