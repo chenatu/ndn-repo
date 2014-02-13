@@ -7,7 +7,7 @@
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helper/command-interest-generator.hpp>
-#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
+//#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
 #include "../storage/storage_handle.h"
 #include "../storage/sqlite/sqlite_handle.h"
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         face.setInterestFilter(rprefix, func_lib::ref(recho), func_lib::ref(recho));
         //validation set up
         KeyChain keyChain;
-        CommandInterestValidator validator;
+        repovalidator validator;
         validator.addInterestRule("^<>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
         //write prefix set up

@@ -47,42 +47,42 @@ def build (bld):
     bld (
         target = "ndn_repo",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['server/server.cc', 'ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['server/server.cc', 'ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
     bld (
         target = "test_sqlite",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['test/test_sqlite.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['test/test_sqlite.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
     bld (
         target = "producer",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['test/producer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['test/producer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
     bld (
         target = "consumer",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['test/consumer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['test/consumer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
     bld (
         target = "test-command-interest",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['test/test-command-interest.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['test/test-command-interest.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
     bld (
         target = "insert_client",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['test/insert_client.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc']),
+        source = bld.path.ant_glob(['test/insert_client.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )

@@ -1,7 +1,7 @@
 #include "write_echo.h"
 
 
-write_echo::write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, CommandInterestValidator validator)
+write_echo::write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, repovalidator validator)
     : face_(face)
     , p_handle_(p_handle)
     , keyChain_(keyChain)

@@ -5,7 +5,7 @@
 
 class write_echo{
 public:
-  write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, CommandInterestValidator validator);
+  write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, repovalidator validator);
   
   // onInterest.
   void operator()(const Name& prefix, const Interest& interest);
@@ -20,7 +20,7 @@ public:
   void onTimeout(ndn::Face &face, const Interest& interest);
 private:
   Face *face_;
-  CommandInterestValidator validator_;
+  repovalidator validator_;
   KeyChain keyChain_;
   int validres_;
 
