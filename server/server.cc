@@ -42,19 +42,21 @@ int main(int argc, char **argv) {
 //copy from ndn-ccp testfile
     try {
         Face face;
-        read_echo recho(face, p_handle);
-        Name prefix("/a/b/c/d");
-        cout << "Register prefix  " << prefix.toUri() << endl;
-        face.setInterestFilter(prefix, func_lib::ref(recho), func_lib::ref(recho));
-
+        read_echo recho(&face, p_handle);
+        //read prefix set
+        Name rprefix("/a/b/c/d");
+        cout << "Register prefix  " << rprefix.toUri() << endl;
+        face.setInterestFilter(rprefix, func_lib::ref(recho), func_lib::ref(recho));
         //validation set up
         KeyChain keyChain;
         CommandInterestValidator validator;
-        validator.addInterestRule("^<TestCommandInterest><Validation>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
+        validator.addInterestRule("^<>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
-
-        write_echo wecho(face, p_handle, validator);
-
+        //write prefix set up
+        Name wprefix("/a/b/c/e");
+        write_echo wecho(&face, p_handle, keyChain, validator);
+        cout << "Register prefix  " << wprefix.toUri() << endl;
+        face.setInterestFilter(wprefix, func_lib::ref(wecho), func_lib::ref(wecho));
         face.processEvents();
     } catch (std::exception& e) {
         cout << "exception: " << e.what() << endl;

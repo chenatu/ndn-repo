@@ -5,7 +5,7 @@
 
 class write_echo{
 public:
-  write_echo(Face face, storage_handle* p_handle, CommandInterestValidator validator);
+  write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, CommandInterestValidator validator);
   
   // onInterest.
   void operator()(const Name& prefix, const Interest& interest);
@@ -14,10 +14,15 @@ public:
   void operator()(const Name& prefix, const std::string& reason);
   void validated(const shared_ptr<const Interest>& interest);
   void validationFailed(const shared_ptr<const Interest>& interest);
+  // Ask for Data insertation and when data comes
+  static void onData(ndn::Face &face, const Interest& interest, Data& data);
+  // Ask for Data insertation and when data timeout
+  static void onTimeout(ndn::Face &face, const Interest& interest);
 private:
-  Face face_;
+  Face *face_;
   CommandInterestValidator validator_;
-  int validres;
+  KeyChain keyChain_;
+  int validres_;
 
   storage_handle* p_handle_;
 };

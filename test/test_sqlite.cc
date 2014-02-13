@@ -31,7 +31,6 @@ int main(int argc, char **argv) {
     KeyChain keyChain;
 
     Name name("/a/b/c/d/1");
-
     Data data(name);
     data.setFreshnessPeriod(2000); // 10 sec
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
