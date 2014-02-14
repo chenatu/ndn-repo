@@ -7,7 +7,6 @@ class read_echo{
 public:
   read_echo(Face* face, storage_handle* p_handle)
     : face_(face)
-    , keyChain_()
     , p_handle_(p_handle)
   { 
   }

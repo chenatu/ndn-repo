@@ -1,10 +1,9 @@
 #include "write_echo.h"
 
 
-write_echo::write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, repovalidator validator)
+write_echo::write_echo(Face* face, storage_handle* p_handle, repovalidator validator)
     : face_(face)
     , p_handle_(p_handle)
-    , keyChain_(keyChain)
     , validator_(validator)
   {
     
@@ -13,24 +12,43 @@ write_echo::write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain,
 void write_echo::operator()(const Name& prefix, const Interest& interest) {
   validator_.validate(interest, bind(&write_echo::validated, this, _1), bind(&write_echo::validationFailed, this, _1));
   if(validres_ == 1){
+    //Should first check whether this name exists
     //Generate response and put
+    int checkres = p_handle_->check_name(interest.getName().getPrefix(-4).getSubName(prefix.size()));
     ControlResponse response;
-    response.setCode(200);
+    
+    Data rdata(interest.getName());
+    cout<<interest.getName()<<endl;
+    //The data doest not exist, can be inserted
+    if(checkres == 0){
+      response.setCode(200);
+      rdata.setContent(response.wireEncode());
+      keyChain_.sign(rdata);
+      face_->put(rdata);
+      cout<<"repo data put"<<rdata.getName()<<endl;
+      //Gernerate interest to get data and insert into repo
+      Interest i;
+      i.setName(interest.getName().getPrefix(-4).getSubName(prefix.size()));
+      face_->expressInterest(i, 
+        bind(&write_echo::onData, this, boost::ref(*face_), _1, _2), 
+        bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
+      cout<<"repo interest express"<<i.getName()<<endl;
+    //The data exists, can not be insterted, return 404 code
+    }else if(checkres == 1){
+      response.setCode(404);
+      rdata.setContent(response.wireEncode());
+      keyChain_.sign(rdata);
+      face_->put(rdata);
+      cout<<"repo data put"<<rdata.getName()<<endl;
+    }
+  }else if(validres_ == 0){
+    ControlResponse response;
+    response.setCode(403);
     Data rdata(interest.getName());
     cout<<interest.getName()<<endl;
     rdata.setContent(response.wireEncode());
     keyChain_.sign(rdata);
     face_->put(rdata);
-    cout<<"repo data put"<<rdata.getName()<<endl;
-    //Gernerate interest to get data and insert into repo
-    Interest i;
-    i.setName(interest.getName().getPrefix(-4).getSubName(prefix.size()));
-    face_->expressInterest(i, 
-      bind(&write_echo::onData, this, boost::ref(*face_), _1, _2), 
-      bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
-    cout<<"repo interest express"<<i.getName()<<endl;
-  }else if(validres_ == 0){
-
   }
 }
 

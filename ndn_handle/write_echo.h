@@ -5,7 +5,7 @@
 
 class write_echo{
 public:
-  write_echo(Face* face, storage_handle* p_handle, KeyChain& keyChain, repovalidator validator);
+  write_echo(Face* face, storage_handle* p_handle, repovalidator validator);
   
   // onInterest.
   void operator()(const Name& prefix, const Interest& interest);

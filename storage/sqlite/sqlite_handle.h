@@ -20,7 +20,7 @@ public:
 	sqlite_handle(string dbpath);
 	~sqlite_handle();
 	virtual int insert_data(const Interest& interest, Data &data);
-	virtual int delete_data(Name& name);
+	virtual int delete_data(const Interest& interest, const Name& name);
 	//The simpliest check that to check the specific version and segment
 	virtual int check_data(const Interest& interest, Data& data);
 //All the fucntions and elements below should be private. Public this period just for testing
@@ -28,7 +28,7 @@ public:
 	//One name, one data response
 	int check_data(Name &name, Data& data);
 	//If has the name in database, return 1, else return 0
-	int check_name(Name& name);
+	virtual int check_name(const Name& name);
 	//If has the pname in database, return 1, else return 0
 	int check_pname(Name& pname);
 	//This check_data is for no selector, it will reply the leftmost data

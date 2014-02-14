@@ -13,6 +13,7 @@
 #include "../storage/sqlite/sqlite_handle.h"
 #include "../ndn_handle/write_echo.h"
 #include "../ndn_handle/read_echo.h"
+#include "../ndn_handle/delete_echo.h"
 
 using namespace std;
 using namespace ndn;
@@ -54,9 +55,15 @@ int main(int argc, char **argv) {
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
         //write prefix set up
         Name wprefix("/a/b/c/e");
-        write_echo wecho(&face, p_handle, keyChain, validator);
+        write_echo wecho(&face, p_handle, validator);
         cout << "Register prefix  " << wprefix.toUri() << endl;
         face.setInterestFilter(wprefix, func_lib::ref(wecho), func_lib::ref(wecho));
+        //delete prefix set up
+        Name dprefix("/a/b/c/f");
+        delete_echo decho(&face, p_handle, validator);
+        cout << "Register prefix  " << dprefix.toUri()<<endl;
+        face.setInterestFilter(dprefix, func_lib::ref(decho), func_lib::ref(decho));
+
         face.processEvents();
     } catch (std::exception& e) {
         cout << "exception: " << e.what() << endl;

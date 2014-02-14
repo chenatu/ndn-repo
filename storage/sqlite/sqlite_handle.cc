@@ -236,7 +236,7 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 
 
 
-int sqlite_handle::delete_data(Name& name){
+int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 	sqlite3_stmt* pqStmt = NULL;
 	sqlite3_stmt* pdStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
@@ -651,7 +651,7 @@ int sqlite_handle::check_data(Name &name, Data& data){
 
 
 //This is the exact name qeury in database.
-int sqlite_handle::check_name(Name& name){
+int sqlite_handle::check_name(const Name& name){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where name = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
