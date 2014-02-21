@@ -6,7 +6,7 @@
 
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/helper/command-interest-generator.hpp>
+#include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 //#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
 #include "../storage/storage_handle.h"
@@ -54,10 +54,15 @@ int main(int argc, char **argv) {
         validator.addInterestRule("^<>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
         //write prefix set up
-        Name wprefix("/a/b/c/e");
+        /*Name wprefix("/a/b/c/e");
         write_echo wecho(&face, p_handle, validator);
         cout << "Register prefix  " << wprefix.toUri() << endl;
-        face.setInterestFilter(wprefix, func_lib::ref(wecho), func_lib::ref(wecho));
+        face.setInterestFilter(wprefix, func_lib::ref(wecho), func_lib::ref(wecho));*/
+
+        Name wprefix("/a/b/c/e");
+        write_echo wecho(&face, p_handle, validator);
+        wecho.listen(wprefix);
+
         //delete prefix set up
         Name dprefix("/a/b/c/f");
         delete_echo decho(&face, p_handle, validator);

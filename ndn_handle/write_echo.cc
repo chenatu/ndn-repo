@@ -9,7 +9,7 @@ write_echo::write_echo(Face* face, storage_handle* p_handle, repovalidator valid
     
   }
 // Interest.
-void write_echo::operator()(const Name& prefix, const Interest& interest) {
+void write_echo::onInterest(const Name& prefix, const Interest& interest) {
   validator_.validate(interest, bind(&write_echo::validated, this, _1), bind(&write_echo::validationFailed, this, _1));
   if(validres_ == 1){
     //Should first check whether this name exists
@@ -26,13 +26,20 @@ void write_echo::operator()(const Name& prefix, const Interest& interest) {
       keyChain_.sign(rdata);
       face_->put(rdata);
       cout<<"repo data put"<<rdata.getName()<<endl;
+      //Check whether segmented
+      if(interest.getName().get(prefix.size()).type() == tlv_repo::SegmentationInfo){
+        cout<<"segmented"<<endl;
+      }else{
+        //if just one to one
+        Interest i;
+        i.setName(interest.getName().getPrefix(-4).getSubName(prefix.size()));
+        face_->expressInterest(i, 
+          bind(&write_echo::onData, this, boost::ref(*face_), _1, _2), 
+          bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
+        cout<<"repo interest express"<<i.getName()<<endl;
+      }
       //Gernerate interest to get data and insert into repo
-      Interest i;
-      i.setName(interest.getName().getPrefix(-4).getSubName(prefix.size()));
-      face_->expressInterest(i, 
-        bind(&write_echo::onData, this, boost::ref(*face_), _1, _2), 
-        bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
-      cout<<"repo interest express"<<i.getName()<<endl;
+      
     //The data exists, can not be insterted, return 404 code
     }else if(checkres == 1){
       response.setCode(404);
@@ -53,7 +60,17 @@ void write_echo::operator()(const Name& prefix, const Interest& interest) {
 }
 
 // onRegisterFailed.
-void write_echo::operator()(const Name& prefix, const std::string& reason){
+void write_echo::onRegisterFailed(const Name& prefix, const std::string& reason){
+
+}
+
+// onInterest for insert check.
+void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
+
+}
+  
+// onRegisterFailed for insert.
+void write_echo::onCheckRegisterFailed(const Name& prefix, const std::string& reason){
 
 }
 
@@ -79,4 +96,10 @@ void write_echo::onData(ndn::Face &face, const ndn::Interest& interest, ndn::Dat
 void write_echo::onTimeout(ndn::Face &face, const ndn::Interest& interest)
 {
   std::cout << "Timeout" << std::endl;
+}
+
+void write_echo::listen(const Name& prefix){
+    (*face_).setInterestFilter(prefix,
+                            func_lib::bind(&write_echo::onInterest, this, _1, _2),
+                            func_lib::bind(&write_echo::onRegisterFailed, this, _1, _2));
 }

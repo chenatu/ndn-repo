@@ -1,5 +1,5 @@
-#include <ndn-cpp-dev/helper/command-interest-generator.hpp>
-#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
+#include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
+#include <ndn-cpp-dev/helpers/command-interest-validator.hpp>
 #include <ndn-cpp-dev/util/random.hpp>
 #include <iostream>
 

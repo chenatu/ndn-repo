@@ -8,7 +8,7 @@
 // correct way to include NDN-CPP headers
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/helper/command-interest-generator.hpp>
+#include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 #include <iostream>
 //#include "face.hpp"
 
