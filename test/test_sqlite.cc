@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
 
 
-    Name name2("/a/b/c/d/2");
+    Name name2("/a/b/c/d/1/2");
     //Name name3("/a/b/c/d/3");
 
     Data data2(name2);
@@ -51,15 +51,20 @@ int main(int argc, char **argv) {
     cout<<data2.wireEncode().wire()<<endl;
     Name name3("/a/b");
     Interest interest;
-    interest.setName(name3);
+    interest.setName(name);
     Exclude exclude;
     Name::Component comp = name.get(3);
     exclude.appendExclude(comp, 0);
     interest.setExclude(exclude);
     interest.setChildSelector(1);
+
+    Interest interest2;
+    interest2.setName(name2);
+    Interest interest3;
+
     Data newdata;
-    handle.insert_data(name, data);
-    handle.insert_data(name2, data2);
+    //handle.insert_data(name2, data2);
+    //handle.insert_data(name, data);
     handle.check_data(interest, newdata);
     cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     cout<<newdata.wireEncode().wire()<<endl;
@@ -69,8 +74,8 @@ int main(int argc, char **argv) {
     //handle.insert_data(prefix, data);
     //handle.check_data(prefix, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;
-    //handle.delete_data(name);
-    //handle.delete_data(name2);
+    handle.delete_data(interest, name);
+    //handle.delete_data(interest2, name2);
     //handle.delete_data(name3);
 
     /*vector<Name> vname;

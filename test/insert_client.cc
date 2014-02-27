@@ -10,6 +10,8 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 #include <iostream>
+
+#include "../helper/repocommandparameter.h"
 //#include "face.hpp"
 
 using namespace std;
@@ -88,14 +90,15 @@ int main()
 {
   try {
     CommandInterestGenerator generator;
-    ndn::Interest i(ndn::Name("/a/b/c/e/a/b/c/d/5"));
-
+    //ndn::Interest i(ndn::Name("/a/b/c/e/a/b/c/d/7"));
+    Name name("/a/b/c/e");
+    
+    name.append(Name("/a/b/c/d/7"));
+    ndn::Interest i(name);
     KeyChain keyChain;
 
     generator.generateWithIdentity(i, keyChain.getDefaultIdentity());
-    //i.setScope(1);
-    i.setInterestLifetime(1000);
-    //i.setMustBeFresh(true);
+
     ndn::Face face;
     face.expressInterest(i,
                           ndn::bind(onData, boost::ref(face), _1, _2),

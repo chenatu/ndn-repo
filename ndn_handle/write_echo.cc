@@ -26,11 +26,13 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       keyChain_.sign(rdata);
       face_->put(rdata);
       cout<<"repo data put"<<rdata.getName()<<endl;
+      
       //Check whether segmented
-      if(interest.getName().get(prefix.size()).type() == tlv_repo::SegmentationInfo){
-        cout<<"segmented"<<endl;
+      if(1){
+
       }else{
         //if just one to one
+        cout<<"one to one"<<endl;
         Interest i;
         i.setName(interest.getName().getPrefix(-4).getSubName(prefix.size()));
         face_->expressInterest(i, 
@@ -40,7 +42,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       }
       //Gernerate interest to get data and insert into repo
       
-    //The data exists, can not be insterted, return 404 code
+    //The data exists, can not be insterted, just return a positive response, do not do anything
     }else if(checkres == 1){
       response.setCode(404);
       rdata.setContent(response.wireEncode());

@@ -152,22 +152,41 @@ sqlite_handle::~sqlite_handle(){
 
 int sqlite_handle::insert_data(const Interest& interest, Data& data){
 	Name name = data.getName();
-	if(check_name(name)){
-		cout<<"The name has existed"<<endl;
-		return 0;
-	}
+
 	if(name.empty()){
 		cout<<"name is empty"<<endl;
 		return 0;
 	}
 
+	int rc = 0;
+
+	if(check_name(name)){
+		string update_sql2 = string("UPDATE NDN_REPO SET data = ? WHERE name = ?;");
+		cout<<"update"<<endl;
+		sqlite3_stmt* pu2Stmt = NULL;
+		if(sqlite3_prepare_v2(db, update_sql2.c_str(), -1, &pu2Stmt, NULL) != SQLITE_OK){
+			sqlite3_finalize(pu2Stmt);
+			cout<<"update sql2 not prepared"<<endl;
+			exit(EXIT_FAILURE);
+		}
+		if (sqlite3_bind_blob(pu2Stmt, 1, data.wireEncode().wire(), data.wireEncode().size(), NULL) == SQLITE_OK && 
+			sqlite3_bind_blob(pu2Stmt, 2, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK){
+			rc = sqlite3_step(pu2Stmt);
+			//what error??
+		}
+		sqlite3_finalize(pu2Stmt);
+		return 1;
+	}
+
+
 	sqlite3_stmt* piStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
 	string insert_sql = string("INSERT INTO NDN_REPO (name, data, pname, childnum) VALUES (?, ?, ?, ?);");
 	string update_sql = string("UPDATE NDN_REPO SET childnum = childnum + 1 WHERE name = ?;");
+
 	Name rootname;
 
-	int rc = 0;
+
 	if(sqlite3_prepare_v2(db, insert_sql.c_str(), -1, &piStmt, NULL) != SQLITE_OK){
 		sqlite3_finalize(piStmt);
 		cout<<"insert sql not prepared"<<endl;
@@ -177,6 +196,7 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 		cout<<"update sql not prepared"<<endl;
 		exit(EXIT_FAILURE);
 	}
+
 	//Insert and check the prefix
 	Name parentname = name;
 	Name grandname;
@@ -214,7 +234,8 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 		sqlite3_reset(puStmt);
 	}
 
-	//Insert the name and the data
+	//Insert the name and the data, if this data name exists update, else insert data
+
 	parentname = name.getPrefix(-1);
 	sqlite3_reset(piStmt);
 	if (sqlite3_bind_blob(piStmt, 1, name.wireEncode().wire(), name.wireEncode().size(), NULL) == SQLITE_OK && 
@@ -229,6 +250,7 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
         	return 0;
 		}
 	}
+
 	sqlite3_finalize(puStmt);
 	sqlite3_finalize(piStmt);
 	return 1;
@@ -240,9 +262,13 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 	sqlite3_stmt* pqStmt = NULL;
 	sqlite3_stmt* pdStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
+	sqlite3_stmt* pu2Stmt = NULL;
+
 	string sql_query = string("SELECT * from NDN_REPO where name = ?;");
 	string sql_delete = string("DELETE from NDN_REPO where name = ?;");
 	string sql_update = string("UPDATE NDN_REPO SET childnum = childnum - 1 WHERE name = ?;");
+	string sql_update2 = string("UPDATE NDN_REPO SET data = null WHERE name = ?;");
+	
 	int rc = sqlite3_prepare_v2(db, sql_query.c_str(), -1, &pqStmt, NULL);
 	Name tmpname = name;
 	int childnum;
@@ -269,9 +295,22 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 		    }
 	    }
 	    if(childnum > 0){
-	    	cout<<"This is internal node which cannot be deleted"<<endl;
-	    	sqlite3_finalize(pqStmt);
-			return 0;
+	    	//update internal node, so just update and return
+	    	if(sqlite3_prepare_v2(db, sql_update2.c_str(), -1, &pu2Stmt, NULL) != SQLITE_OK){
+			    sqlite3_finalize(pu2Stmt);
+			    cout<<"delete update prepared failed"<<endl;
+			    exit(EXIT_FAILURE);
+			}
+	    	if(sqlite3_bind_blob(pu2Stmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
+			    rc = sqlite3_step(pu2Stmt);
+			    //what error???
+
+		   	}else{
+		  		cout<<"delete bind error"<<endl;
+			   	sqlite3_finalize(pu2Stmt);
+		    	exit(EXIT_FAILURE);
+		    }
+		    return 1;
 	    }else{
 	    	//Delete the leaf node
 	    	if(sqlite3_bind_blob(pdStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
@@ -291,18 +330,22 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 
 	    sqlite3_reset(pqStmt);
 
+	    //check prefix if childnum is 0 and data is null
+	   	Data data;
 	    do{
 	    	tmpname = tmpname.getPrefix(-1);
 	    	if (sqlite3_bind_blob(pqStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 	        	rc = sqlite3_step(pqStmt);
 		        if (rc == SQLITE_ROW) {
 		        	childnum = sqlite3_column_int(pqStmt, 3);
+
+		            data.wireDecode(Block(sqlite3_column_blob(pqStmt, 1),sqlite3_column_bytes(pqStmt, 1)));
 		        }else {
 					cout<<"Database query no such name or failure rc:"<<rc<<endl;
 					sqlite3_finalize(pqStmt);
 					return 0;
 			    }
-			    if(childnum == 1 && !tmpname.empty()){
+			    if(childnum == 1 && !tmpname.empty() && data.getContent().empty()){
 			    	//Delete this internal node
 			    	if(sqlite3_bind_blob(pdStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 			    		rc = sqlite3_step(pdStmt);
@@ -486,6 +529,8 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 	queue<Name> qname;
 	int childnum;
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
+
+	//if this is leaf
 	if(rc == SQLITE_OK){
 		if(sqlite3_bind_blob(pStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 			rc = sqlite3_step(pStmt);
@@ -510,7 +555,7 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 	}
 
 	sqlite3_finalize(pStmt);
-
+	// if not leaf
 	rc = sqlite3_prepare_v2(db, psql.c_str(), -1, &ppStmt, NULL);
 	qname.push(tmpname);
 	if(rc == SQLITE_OK){
@@ -526,6 +571,9 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 						childnum = sqlite3_column_int(ppStmt, 3);
 						if(childnum > 0){
 							qname.push(ename);
+							if(sqlite3_column_bytes(ppStmt, 1) > 0){
+								vname.push_back(ename);
+							}
 						}else{
 							vname.push_back(ename);
 						}
@@ -676,7 +724,7 @@ int sqlite_handle::check_name(const Name& name){
 	return 1;
 }
 
-//This is the exact name qeury in database.
+//This is the exact parent name qeury in database.
 int sqlite_handle::check_pname(Name& pname){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where pname = ?;");
