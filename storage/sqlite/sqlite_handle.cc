@@ -393,27 +393,28 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 	return 1;
 }
 
-int sqlite_handle::check_data(const Interest &interest, Data& data){
+int sqlite_handle::check_data(const Interest& interest, Data& data){
 	Name name = interest.getName();
+	Selectors selectors = interest.getSelectors();
 	vector<Name> vname;
 	Name resname;
 	if(!interest.hasSelectors()){
 		return check_data_plain(name, data);
 	}else{
 		check_data_name(name, vname);
-		if(interest.getMinSuffixComponents() >= 0){
+		if(selectors.getMinSuffixComponents() >= 0){
 			if(!check_name_minsuffix(name, interest.getMinSuffixComponents(), vname))
 				return 0;
 		}
-		if(interest.getMaxSuffixComponents() >= 0){
+		if(selectors.getMaxSuffixComponents() >= 0){
 			if(!check_name_maxsuffix(name, interest.getMaxSuffixComponents(), vname))
 				return 0;
 		}
-		if(!interest.getExclude().empty()){
+		if(!selectors.getExclude().empty()){
 			if(!check_name_exclude(name, interest.getExclude(), vname))
 				return 0;
 		}
-		if(interest.getChildSelector() >= 0){
+		if(selectors.getChildSelector() >= 0){
 			if(!check_name_child(name, interest.getChildSelector(), vname, resname))
 				return 0;
 		}else{
