@@ -32,10 +32,13 @@ class repocommandparameter {
 public:
   struct Error : public Tlv::Error { Error(const std::string &what) : Tlv::Error(what) {} };
   repocommandparameter(){
-
+    hasStartBlockId_ = 0;
+    hasEndBlockId_ = 0;
   }
   repocommandparameter(const Block& block)
   {
+    startBlockId_ = 0;
+    endBlockId_ = 0;
     wireDecode(block);
   }
   
@@ -67,6 +70,12 @@ public:
     return *this;
   }
 
+  bool inline
+  hasSelectors() const
+  {
+    return selectors_.empty();
+  }
+
   uint64_t 
   getStartBlockId () const
   {
@@ -77,8 +86,15 @@ public:
   setStartBlockId (uint64_t startBlockId)
   {
     startBlockId_  = startBlockId;
+    hasStartBlockId_ = 1;
     wire_.reset ();
     return *this;
+  }
+
+  bool inline
+  hasStartBlockId() const
+  {
+    return hasStartBlockId_;
   }
 
   uint64_t 
@@ -91,9 +107,17 @@ public:
   setEndBlockId (uint64_t endBlockId)
   {
     endBlockId_  = endBlockId;
+    hasEndBlockId_ = 1;
     wire_.reset ();
     return *this;
   }
+
+  bool inline
+  hasEndBlockId() const
+  {
+    return hasEndBlockId_;
+  }
+
 
   uint64_t 
   getProcessId () const
@@ -118,7 +142,7 @@ public:
   
   void 
   wireDecode (const Block &wire);
-  
+
 private:
 
   Name name_;
@@ -126,6 +150,9 @@ private:
   uint64_t startBlockId_;
   uint64_t endBlockId_;
   uint64_t processId_;
+
+  bool hasStartBlockId_;
+  bool hasEndBlockId_;
 
   mutable Block wire_;
 };
@@ -146,16 +173,20 @@ repocommandparameter::wireEncode(EncodingImpl<T>& blk) const
   }
 
 //prepare startblockid
-  var_len = blk.prependNonNegativeInteger (startBlockId_);
-  total_len += var_len;
-  total_len += blk.prependVarNumber (var_len);
-  total_len += blk.prependVarNumber (tlv_repo::StartBlockId);
+  if(hasEndBlockId_){
+    var_len = blk.prependNonNegativeInteger (startBlockId_);
+    total_len += var_len;
+    total_len += blk.prependVarNumber (var_len);
+    total_len += blk.prependVarNumber (tlv_repo::StartBlockId);
+  }
 
 //prepare endblockid
-  var_len = blk.prependNonNegativeInteger (endBlockId_);
-  total_len += var_len;
-  total_len += blk.prependVarNumber (var_len);
-  total_len += blk.prependVarNumber (tlv_repo::EndBlockId);
+  if(hasEndBlockId_){
+    var_len = blk.prependNonNegativeInteger (endBlockId_);
+    total_len += var_len;
+    total_len += blk.prependVarNumber (var_len);
+    total_len += blk.prependVarNumber (tlv_repo::EndBlockId);
+  }
 
 //prepare processid
   var_len = blk.prependNonNegativeInteger (processId_);
@@ -212,6 +243,7 @@ repocommandparameter::wireDecode (const Block &wire)
   val = wire_.find(tlv_repo::StartBlockId);
   if (val != wire_.elements_end())
   {
+    hasStartBlockId_ = 1;
     startBlockId_ = readNonNegativeInteger(*val);
   }
 
@@ -219,6 +251,7 @@ repocommandparameter::wireDecode (const Block &wire)
   val = wire_.find(tlv_repo::EndBlockId);
   if (val != wire_.elements_end())
   {
+    hasEndBlockId_ = 1;
     endBlockId_ = readNonNegativeInteger(*val);
   }
 

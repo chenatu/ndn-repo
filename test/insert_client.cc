@@ -84,8 +84,6 @@ onTimeout(ndn::Face &face,
   std::cout << "Timeout" << std::endl;
 }
 
-
-
 int main()
 {
   try {
@@ -93,7 +91,11 @@ int main()
     //ndn::Interest i(ndn::Name("/a/b/c/e/a/b/c/d/7"));
     Name name("/a/b/c/e");
     
-    name.append(Name("/a/b/c/d/7"));
+    repocommandparameter rpara;
+    rpara.setName(Name("/a/b/c/d/8"));
+
+    name.append(rpara.wireEncode());
+    
     ndn::Interest i(name);
     KeyChain keyChain;
 
