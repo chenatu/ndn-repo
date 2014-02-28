@@ -75,7 +75,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
           uint64_t endBlockId = rpara.getEndBlockId();
           cout<<"startBlockId: "<<startBlockId<<endl;
           cout<<"endBlockId: "<<endBlockId<<endl;
-          if(startBlockId > endBlockId){           
+          if(startBlockId <= endBlockId){           
             boost::random::mt19937_64 gen;
             boost::random::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFF);
             uint64_t processId = dist(gen);
@@ -111,9 +111,9 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
                 bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
             }
           }else{
+            cout<<"start > end"<<endl;
             repocommandresponse response;
             response.setStatusCode(403);
-
             Data rdata(interest.getName());
             cout<<interest.getName()<<endl;
             rdata.setContent(response.wireEncode());

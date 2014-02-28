@@ -25,7 +25,7 @@ public:
   void validationFailed(const shared_ptr<const Interest>& interest);
   // Ask for Data insertation and when data comes
   void onData(ndn::Face &face, const Interest& interest, Data& data, uint64_t processId);
-    // Ask for Data insertation and when data comes
+  // Ask for Segmented Data insertation and when data comes
   void onSegData(ndn::Face &face, const Interest& interest, Data& data, uint64_t processId);
   // Ask for Data insertation and when data timeout
   void onTimeout(ndn::Face &face, const Interest& interest);
