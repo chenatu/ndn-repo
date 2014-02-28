@@ -24,11 +24,15 @@ public:
 
   void validationFailed(const shared_ptr<const Interest>& interest);
   // Ask for Data insertation and when data comes
-  void onData(ndn::Face &face, const Interest& interest, Data& data);
+  void onData(ndn::Face &face, const Interest& interest, Data& data, uint64_t processId);
+    // Ask for Data insertation and when data comes
+  void onSegData(ndn::Face &face, const Interest& interest, Data& data, uint64_t processId);
   // Ask for Data insertation and when data timeout
   void onTimeout(ndn::Face &face, const Interest& interest);
+  // Ask for Data when EndBlockId is null
 
   void listen(const Name& prefix);
+  map<uint64_t, repocommandresponse> processMap;
 private:
   Face* face_;
   repovalidator validator_;

@@ -16,6 +16,9 @@
 #include "../helper/repocommandresponse.h"
 #include "../helper/repocommandparameter.h"
 #include "../storage/storage_handle.h"
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <map>
 
 using namespace std;
 using namespace ndn;
