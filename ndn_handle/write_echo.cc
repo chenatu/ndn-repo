@@ -23,8 +23,11 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       // No Segment, just use selectors to fetch the data; one to one
 
       //The command is OK. can start to fetch the data
-      ControlResponse response;
-      response.setCode(100);
+      //random processid
+
+
+      repocommandresponse response;
+      response.setStatusCode(100);
       Data rdata(interest.getName());
       cout<<interest.getName()<<endl;
       rdata.setContent(response.wireEncode());
@@ -43,8 +46,8 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       //segmented
       if(rpara.hasSelectors()){
         //has selectors, return  402
-        ControlResponse response;
-        response.setCode(402);
+        repocommandresponse response;
+        response.setStatusCode(402);
         Data rdata(interest.getName());
         cout<<interest.getName()<<endl;
         rdata.setContent(response.wireEncode());
@@ -62,8 +65,8 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
     }
    
   }else if(validres_ == 0){
-    ControlResponse response;
-    response.setCode(401);
+    repocommandresponse response;
+    response.setStatusCode(401);
     Data rdata(interest.getName());
     cout<<interest.getName()<<endl;
     rdata.setContent(response.wireEncode());

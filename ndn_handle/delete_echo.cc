@@ -16,7 +16,7 @@ void delete_echo::operator()(const Name& prefix, const Interest& interest) {
     //Should first check whether this name exists
     //Generate response and put
     int res = p_handle_->check_name(interest.getName().getPrefix(-4).getSubName(prefix.size()));
-    ControlResponse response;
+    repocommandresponse response;
     
     Data rdata(interest.getName());
     cout<<interest.getName()<<endl;
@@ -26,14 +26,14 @@ void delete_echo::operator()(const Name& prefix, const Interest& interest) {
       res = p_handle_->delete_data(interest, interest.getName().getPrefix(-4).getSubName(prefix.size()));
       cout<<"end delete"<<endl;
       if(res == 1){
-        response.setCode(200);
+        response.setStatusCode(200);
         rdata.setContent(response.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
         cout<<"repo data put"<<rdata.getName()<<endl;
       }else if(res == 0){
         //delete error
-        response.setCode(404);
+        response.setStatusCode(404);
         rdata.setContent(response.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
@@ -42,7 +42,7 @@ void delete_echo::operator()(const Name& prefix, const Interest& interest) {
     //The data doest not exit, can not be deleted, return 404 code
     }else if(res == 0){
       cout<<"The data doest not exit, can not be deleted, return 404 code"<<endl;
-      response.setCode(404);
+      response.setStatusCode(404);
       cout<<"----0----"<<endl;
       rdata.setContent(response.wireEncode());
       cout<<"----1----"<<endl;
@@ -52,8 +52,8 @@ void delete_echo::operator()(const Name& prefix, const Interest& interest) {
       cout<<"repo data put"<<rdata.getName()<<endl;
     }
   }else if(validres_ == 0){
-    ControlResponse response;
-    response.setCode(403);
+    repocommandresponse response;
+    response.setStatusCode(403);
     Data rdata(interest.getName());
     cout<<interest.getName()<<endl;
     rdata.setContent(response.wireEncode());

@@ -2,7 +2,6 @@
 #define WRITE_ECHO_H
 
 #include "ndn_handle_common.h"
-#include "../helper/repocommandparameter.h"
 
 class write_echo{
 public:

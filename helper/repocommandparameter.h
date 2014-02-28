@@ -8,25 +8,11 @@
 #define REPOCOMMANDPARAMETER_H
 
 #include <ndn-cpp-dev/encoding/encoding-buffer.hpp>
-#include <ndn-cpp-dev/encoding/tlv-nfd.hpp>
 #include <ndn-cpp-dev/name.hpp>
 #include <ndn-cpp-dev/selectors.hpp>
+#include "repo_tlv.h"
 
-
-using namespace ndn;  
-
-namespace tlv_repo{
-enum {
-  // ControlResponse
-  RepoCommandParameter = 201,
-  Name = 7, // Name
-  Selectors = 9,
-  StartBlockId = 204,
-  EndBlockId = 205,
-  ProcessId =206
-};
-} //tlv_repo
-
+using namespace ndn; 
 
 class repocommandparameter {
 public:

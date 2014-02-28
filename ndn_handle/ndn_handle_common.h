@@ -12,8 +12,9 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include "../helper/repovalidator.h"
 //#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
-#include <ndn-cpp-dev/management/nfd-control-response.hpp>
-
+//#include <ndn-cpp-dev/management/nfd-control-response.hpp>
+#include "../helper/repocommandresponse.h"
+#include "../helper/repocommandparameter.h"
 #include "../storage/storage_handle.h"
 
 using namespace std;
