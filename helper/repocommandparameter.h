@@ -59,7 +59,7 @@ public:
   bool inline
   hasSelectors() const
   {
-    return selectors_.empty();
+    return !selectors_.empty();
   }
 
   uint64_t 

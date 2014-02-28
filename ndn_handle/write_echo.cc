@@ -16,8 +16,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
   rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
   Name name = rpara.getName();
   cout<<"name:"<<name<<endl;
-  cout<<"hasStartBlockId"<<rpara.hasStartBlockId()<<endl;
-  cout<<"hasEndBlockId"<<rpara.hasEndBlockId()<<endl;
+
   if(validres_ == 1){
     if(!rpara.hasStartBlockId() && !rpara.hasEndBlockId()){
       // No Segment, just use selectors to fetch the data; one to one
@@ -44,8 +43,11 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       cout<<"repo interest express"<<i.getName()<<endl;
     }else{
       //segmented
+      cout<<"segmented"<<endl;
+
       if(rpara.hasSelectors()){
         //has selectors, return  402
+        cout<<"has selectors"<<endl;
         repocommandresponse response;
         response.setStatusCode(402);
         Data rdata(interest.getName());
@@ -56,8 +58,38 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       }else{
         if(rpara.hasEndBlockId()){
           //normal fetch segment
-          if(!rpara.hasStartBlockId())
+          if(!rpara.hasStartBlockId()){
             rpara.setStartBlockId(0);
+          }
+
+          uint64_t startBlockId = rpara.getStartBlockId();
+          uint64_t endBlockId = rpara.getEndBlockId();
+          cout<<"startBlockId: "<<startBlockId<<endl;
+          cout<<"endBlockId: "<<endBlockId<<endl;
+
+          repocommandresponse response;
+          response.setStatusCode(100);
+          response.setStartBlockId(startBlockId);
+          response.setEndBlockId(endBlockId);
+          Data rdata(interest.getName());
+          cout<<interest.getName()<<endl;
+          rdata.setContent(response.wireEncode());
+          keyChain_.sign(rdata);
+          face_->put(rdata);
+
+          Name tmpname;
+          Interest i;
+          uint64_t j;
+          for(j = startBlockId; j <= endBlockId; j++){
+            tmpname.wireDecode(name.wireEncode());
+            tmpname.appendSegment(j);
+            i.setName(tmpname);
+            cout<<"seg:"<<j<<endl;
+            face_->expressInterest(i, 
+              bind(&write_echo::onData, this, boost::ref(*face_), _1, _2), 
+              bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
+          }
+
         }else{
           //no EndBlockId, so fetch FindalBlockId in data, if timeout, stop
         }

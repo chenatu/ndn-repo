@@ -92,6 +92,9 @@ int main()
     Name name("/a/b/c/e");
     
     repocommandparameter rpara;
+    rpara.setStartBlockId(0);
+    rpara.setEndBlockId(1);
+
     rpara.setName(Name("/a/b/c/d/8"));
 
     name.append(rpara.wireEncode());
