@@ -8,12 +8,20 @@ public:
   delete_echo(Face* face, storage_handle* p_handle, repovalidator validator);
   
   // onInterest.
-  void operator()(const Name& prefix, const Interest& interest);
+  void onInterest(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
-  void operator()(const Name& prefix, const std::string& reason);
+  void onRegisterFailed(const Name& prefix, const std::string& reason);
   void validated(const shared_ptr<const Interest>& interest);
+  // onInterest for insert check.
+  void onCheckInterest(const Name& prefix, const Interest& interest);
+  // onRegisterFailed for insert.
+  void onCheckRegisterFailed(const Name& prefix, const std::string& reason);
   void validationFailed(const shared_ptr<const Interest>& interest);
+
+  void deleteListen(const Name& prefix);
+
+
 private:
   Face *face_;
   repovalidator validator_;

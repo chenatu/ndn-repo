@@ -20,11 +20,13 @@ public:
   repocommandparameter(){
     hasStartBlockId_ = 0;
     hasEndBlockId_ = 0;
+    hasProcessId_ = 0;
   }
   repocommandparameter(const Block& block)
   {
     startBlockId_ = 0;
     endBlockId_ = 0;
+    hasProcessId_ = 0;
     wireDecode(block);
   }
   
@@ -67,7 +69,7 @@ public:
   {
     return startBlockId_;
   }
-  
+
   repocommandparameter&
   setStartBlockId (uint64_t startBlockId)
   {
@@ -110,11 +112,18 @@ public:
   {
     return processId_;
   }
-  
+
+  bool inline
+  hasProcessId() const
+  {
+    return hasProcessId_;
+  }  
+
   repocommandparameter&
-  setEProcessId (uint64_t processId)
+  setProcessId (uint64_t processId)
   {
     processId_  = processId;
+    hasProcessId_ = 1;
     wire_.reset ();
     return *this;
   }
@@ -139,6 +148,7 @@ private:
 
   bool hasStartBlockId_;
   bool hasEndBlockId_;
+  bool hasProcessId_;
 
   mutable Block wire_;
 };
@@ -241,10 +251,11 @@ repocommandparameter::wireDecode (const Block &wire)
     endBlockId_ = readNonNegativeInteger(*val);
   }
 
-  // EndBlockId
+  // ProcessId
   val = wire_.find(tlv_repo::ProcessId);
   if (val != wire_.elements_end())
   {
+    hasProcessId_ = 1;
     processId_ = readNonNegativeInteger(*val);
   }
 

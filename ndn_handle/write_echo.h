@@ -31,7 +31,7 @@ public:
   void onTimeout(ndn::Face &face, const Interest& interest);
   // Ask for Data when EndBlockId is null
 
-  void listen(const Name& prefix);
+  void writeListen(const Name& prefix);
   map<uint64_t, repocommandresponse> processMap;
 private:
   Face* face_;

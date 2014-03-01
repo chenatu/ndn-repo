@@ -63,6 +63,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
         rdata.setContent(response.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
+        return;
       }else{
         if(rpara.hasEndBlockId()){
           //normal fetch segment
@@ -119,6 +120,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
             rdata.setContent(response.wireEncode());
             keyChain_.sign(rdata);
             face_->put(rdata);
+            return;
           }
 
         }else{
@@ -135,6 +137,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
     rdata.setContent(response.wireEncode());
     keyChain_.sign(rdata);
     face_->put(rdata);
+    return;
   }
 }
 
@@ -220,7 +223,7 @@ void write_echo::onTimeout(ndn::Face &face, const ndn::Interest& interest)
   std::cout << "Timeout" << std::endl;
 }
 
-void write_echo::listen(const Name& prefix){
+void write_echo::writeListen(const Name& prefix){
     (*face_).setInterestFilter(prefix,
                             func_lib::bind(&write_echo::onInterest, this, _1, _2),
                             func_lib::bind(&write_echo::onRegisterFailed, this, _1, _2));

@@ -61,13 +61,11 @@ int main(int argc, char **argv) {
 
         Name wprefix("/a/b/c/e");
         write_echo wecho(&face, p_handle, validator);
-        wecho.listen(wprefix);
+        wecho.writeListen(wprefix);
 
         //delete prefix set up
         Name dprefix("/a/b/c/f");
         delete_echo decho(&face, p_handle, validator);
-        cout << "Register prefix  " << dprefix.toUri()<<endl;
-        face.setInterestFilter(dprefix, func_lib::ref(decho), func_lib::ref(decho));
 
         face.processEvents();
     } catch (std::exception& e) {
