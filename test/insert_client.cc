@@ -30,17 +30,19 @@ public:
   void
   onInterest(const Name& name, const Interest& interest)
   {
+    cout<<"onInterest"<<endl;
     std::cout << "<< I: " << interest << std::endl;
     
     ndn::Data data(ndn::Name(interest.getName()));
-    cout<<interest.getName()<<endl;
+    //cout<<<<interest.getName()<<endl;
+    cout<<"data.getName(): "<<data.getName()<<endl;
     data.setFreshnessPeriod(1000); // 10 sec
 
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
 
     keyChain_.sign(data);
 
-    cout << ">> D: " << data << std::endl;
+    cout << ">> D: " << data.getName().toUri() << std::endl;
     face_->put(data);
   }
 
@@ -71,6 +73,7 @@ void
 onData(ndn::Face &face,
        const ndn::Interest& interest, ndn::Data& data)
 {
+  cout<<"onData"<<endl;
   std::cout << "I: " << interest.toUri() << std::endl;
   std::cout << "D: " << data.getName().toUri() << std::endl;
 
@@ -93,7 +96,7 @@ int main()
     
     repocommandparameter rpara;
     rpara.setStartBlockId(0);
-    rpara.setEndBlockId(1);
+    rpara.setEndBlockId(10);
 
     rpara.setName(Name("/a/b/c/d/8"));
 

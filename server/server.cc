@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
         //delete prefix set up
         Name dprefix("/a/b/c/f");
         delete_echo decho(&face, p_handle, validator);
+        decho.deleteListen(dprefix);
 
         face.processEvents();
     } catch (std::exception& e) {

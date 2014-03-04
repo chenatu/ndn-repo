@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 
     KeyChain keyChain;
 
-    Name name("/a/b/c/d/1");
+    Name name("/a/b/c/d/8");
     Data data(name);
     data.setFreshnessPeriod(2000); // 10 sec
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     cout<<"data size: "<<data.wireEncode().size()<<endl;
     cout<<data.wireEncode().wire()<<endl;
 
-
+    cout<<"data: "<<data.getName().toUri()<<endl;
 
     Name name2("/a/b/c/d/1/2");
     //Name name3("/a/b/c/d/3");
@@ -64,17 +64,17 @@ int main(int argc, char **argv) {
 
     Data newdata;
     //handle.insert_data(name2, data2);
-    //handle.insert_data(name, data);
-    handle.check_data(interest, newdata);
-    cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
-    cout<<newdata.wireEncode().wire()<<endl;
+    handle.insert_data(name, data);
+    //handle.check_data(interest, newdata);
+    //cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
+    //cout<<newdata.wireEncode().wire()<<endl;
     //handle.insert_data(name, data);
     //handle.check_data(name, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;
     //handle.insert_data(prefix, data);
     //handle.check_data(prefix, newdata);
     //cout<<newdata.wireEncode().wire()<<endl;
-    handle.delete_data(interest, name);
+    //handle.delete_data(interest, name);
     //handle.delete_data(interest2, name2);
     //handle.delete_data(name3);
 

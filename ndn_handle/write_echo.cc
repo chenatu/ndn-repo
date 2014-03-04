@@ -168,6 +168,7 @@ void write_echo::validationFailed(const shared_ptr<const Interest>& interest){
 
 void write_echo::onData(ndn::Face &face, const ndn::Interest& interest, ndn::Data& data, uint64_t processId)
 {
+  cout<<"onData"<<endl;
   cout << "I: " << interest.toUri() << endl;
   cout << "D: " << data.getName().toUri() << endl;
   map<uint64_t ,repocommandresponse>::iterator it;;

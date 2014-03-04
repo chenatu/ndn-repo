@@ -256,9 +256,7 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 	return 1;
 }
 
-
-
-int sqlite_handle::delete_data(const Interest& interest, const Name& name){
+int sqlite_handle::delete_data(const Name& name){
 	sqlite3_stmt* pqStmt = NULL;
 	sqlite3_stmt* pdStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
@@ -304,7 +302,7 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 	    	if(sqlite3_bind_blob(pu2Stmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 			    rc = sqlite3_step(pu2Stmt);
 			    //what error???
-
+			    cout<<"delete_data update"<<endl;
 		   	}else{
 		  		cout<<"delete bind error"<<endl;
 			   	sqlite3_finalize(pu2Stmt);
@@ -328,24 +326,28 @@ int sqlite_handle::delete_data(const Interest& interest, const Name& name){
 		    sqlite3_reset(pdStmt);
 	    }
 
-	    sqlite3_reset(pqStmt);
-
+	    pqStmt = NULL;
+		rc = sqlite3_prepare_v2(db, sql_query.c_str(), -1, &pqStmt, NULL);
+		if(rc != SQLITE_OK){
+			cout<<"prepare error"<<endl;
+			sqlite3_finalize(pqStmt);
+		    exit(EXIT_FAILURE);
+		}
 	    //check prefix if childnum is 0 and data is null
-	   	Data data;
+	   	int dataSize;
 	    do{
 	    	tmpname = tmpname.getPrefix(-1);
 	    	if (sqlite3_bind_blob(pqStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 	        	rc = sqlite3_step(pqStmt);
 		        if (rc == SQLITE_ROW) {
 		        	childnum = sqlite3_column_int(pqStmt, 3);
-
-		            data.wireDecode(Block(sqlite3_column_blob(pqStmt, 1),sqlite3_column_bytes(pqStmt, 1)));
+		        	dataSize = sqlite3_column_bytes(pqStmt, 1);
 		        }else {
 					cout<<"Database query no such name or failure rc:"<<rc<<endl;
 					sqlite3_finalize(pqStmt);
 					return 0;
 			    }
-			    if(childnum == 1 && !tmpname.empty() && data.getContent().empty()){
+			    if(childnum == 1 && !tmpname.empty() && dataSize == 0){
 			    	//Delete this internal node
 			    	if(sqlite3_bind_blob(pdStmt, 1, tmpname.wireEncode().wire(), tmpname.wireEncode().size(), NULL) == SQLITE_OK){
 			    		rc = sqlite3_step(pdStmt);
@@ -516,7 +518,7 @@ int sqlite_handle::check_data_plain(Name& name, Data& data){
 }
 
 //retrieve all the leaf nodes of a subtree
-int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
+int sqlite_handle::check_data_name(const Name& name, vector<Name>& vname){
 	if(name.empty()){
 		cout<<"The name is empty"<<endl;
 		return 0;
@@ -602,7 +604,7 @@ int sqlite_handle::check_data_name(Name& name, vector<Name>& vname){
 	}
 }
 
-int sqlite_handle::check_name_minsuffix(Name& name, int minSuffixComponents, vector<Name>& vname){
+int sqlite_handle::check_name_minsuffix(const Name& name, int minSuffixComponents, vector<Name>& vname){
 	int mincomp = name.size() + minSuffixComponents;
 	int last = 0;
 	for(int i=0; i<vname.size(); i++, last++){
@@ -618,7 +620,7 @@ int sqlite_handle::check_name_minsuffix(Name& name, int minSuffixComponents, vec
 	return 1;
 }
 
-int sqlite_handle::check_name_maxsuffix(Name& name, int maxSuffixComponents, vector<Name>& vname){
+int sqlite_handle::check_name_maxsuffix(const Name& name, int maxSuffixComponents, vector<Name>& vname){
 	int mincomp = name.size() + maxSuffixComponents;
 	int last = 0;
 	for(int i=0; i<vname.size(); i++, last++){
@@ -634,7 +636,7 @@ int sqlite_handle::check_name_maxsuffix(Name& name, int maxSuffixComponents, vec
 	return 1;
 }
 
-int sqlite_handle::check_name_exclude(Name& name, const Exclude& exclude, vector<Name>& vname){
+int sqlite_handle::check_name_exclude(const Name& name, const Exclude& exclude, vector<Name>& vname){
 	int exCompNum = name.size();
 	int last = 0;
 	for(int i=0; i<vname.size(); ++i, ++last){
@@ -651,7 +653,7 @@ int sqlite_handle::check_name_exclude(Name& name, const Exclude& exclude, vector
 }
 
 
-int sqlite_handle::check_name_child(Name& name, int childselector, vector<Name>& vname, Name& resname){
+int sqlite_handle::check_name_child(const Name& name, int childselector, vector<Name>& vname, Name& resname){
 	if(childselector == 0){
 		sort_name_small(vname);
 		if(vname.size() > 0){
@@ -670,6 +672,39 @@ int sqlite_handle::check_name_child(Name& name, int childselector, vector<Name>&
 		return 0;
 	}
 	return 1;
+}
+
+int sqlite_handle::check_name_any(const Name& name, const Selectors& selectors, 	vector<Name>& vname){
+	if(selectors.empty()){
+		if(check_name(name)){
+			vname.push_back(name);
+		}
+		return 1;
+	}else{
+		check_data_name(name, vname);
+		if(selectors.getMinSuffixComponents() >= 0){
+			if(!check_name_minsuffix(name, selectors.getMinSuffixComponents(), vname))
+				return 0;
+		}
+		if(selectors.getMaxSuffixComponents() >= 0){
+			if(!check_name_maxsuffix(name, selectors.getMaxSuffixComponents(), vname))
+				return 0;
+		}
+		if(!selectors.getExclude().empty()){
+			if(!check_name_exclude(name, selectors.getExclude(), vname))
+				return 0;
+		}
+		if(selectors.getChildSelector() >= 0){
+			Name resname;
+			if(!check_name_child(name, selectors.getChildSelector(), vname, resname))
+				return 0;
+			vname.clear();
+			vname.push_back(resname);
+			return 1;
+		}else{
+			return 1;
+		}
+	}	
 }
 
 int sqlite_handle::check_data(Name &name, Data& data){
