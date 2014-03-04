@@ -92,7 +92,7 @@ int main()
   try {
     CommandInterestGenerator generator;
     //ndn::Interest i(ndn::Name("/a/b/c/e/a/b/c/d/7"));
-    Name name("/a/b/c/e");
+    Name name("/a/b/c/insert");
     
     repocommandparameter rpara;
     rpara.setStartBlockId(0);

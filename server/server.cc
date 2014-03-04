@@ -3,10 +3,17 @@
 #include <cstdlib>
 #include <sstream>
 #include <time.h>
+//compile json
+//#include <jsoncpp/json/json.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp> 
+#include <fstream>
 
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
+#include <assert.h>
 //#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
 #include "../storage/storage_handle.h"
@@ -22,6 +29,8 @@ static const string ccnr_usage_message(
 "ndn_repo - NDNx Repository Daemon\n"
 "Welcome!\n"
 );
+
+int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo& decho);
 
 int main(int argc, char **argv) {
     int opt;
@@ -43,30 +52,18 @@ int main(int argc, char **argv) {
 //copy from ndn-ccp testfile
     try {
         Face face;
-        read_echo recho(&face, p_handle);
-        //read prefix set
-        Name rprefix("/a/b/c/d");
-        cout << "Register prefix  " << rprefix.toUri() << endl;
-        face.setInterestFilter(rprefix, func_lib::ref(recho), func_lib::ref(recho));
+
         //validation set up
         KeyChain keyChain;
         repovalidator validator;
         validator.addInterestRule("^<>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
-        //write prefix set up
-        /*Name wprefix("/a/b/c/e");
-        write_echo wecho(&face, p_handle, validator);
-        cout << "Register prefix  " << wprefix.toUri() << endl;
-        face.setInterestFilter(wprefix, func_lib::ref(wecho), func_lib::ref(wecho));*/
 
-        Name wprefix("/a/b/c/e");
+        read_echo recho(&face, p_handle);
         write_echo wecho(&face, p_handle, validator);
-        wecho.writeListen(wprefix);
-
-        //delete prefix set up
-        Name dprefix("/a/b/c/f");
         delete_echo decho(&face, p_handle, validator);
-        decho.deleteListen(dprefix);
+
+        conf_init(string("/home/guest/workspace/ndn_repo/test_json.conf"), recho, wecho, decho);
 
         face.processEvents();
     } catch (std::exception& e) {
@@ -77,3 +74,41 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo& decho){
+    ifstream fin;
+    cout<<confpath.c_str()<<endl;
+    fin.open(confpath.c_str());
+    assert(fin.is_open());
+
+    boost::property_tree::ptree pt;  
+    try{      
+        boost::property_tree::read_json(fin, pt);  
+    }  
+    catch(boost::property_tree::ptree_error & e) {
+        cout<<"read_json error"<<endl;
+        return 0;   
+    }
+    boost::property_tree::ptree dataConf = pt.get_child("data-conf");
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type& prefix, dataConf) {
+        cout<<"readListen: "<<prefix.second.get<std::string>("prefix")<<endl;
+        recho.readListen(Name(prefix.second.get<std::string>("prefix")));
+    }
+    boost::property_tree::ptree commandConf = pt.get_child("command-conf");
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type& command, commandConf){
+        string commandVerb = command.second.get<std::string>("verb");
+        if(commandVerb == "insert"){
+            wecho.writeListen(Name(command.second.get<std::string>("repo-prefix")).append("insert"));
+            cout<<"writeListen: "<<Name(command.second.get<std::string>("repo-prefix")).append("insert")<<endl;
+        }else if(commandVerb == "insert-check"){
+
+        }else if(commandVerb == "delete"){
+            decho.deleteListen(Name(command.second.get<std::string>("repo-prefix")).append("delete"));
+            cout<<"deleteListen: "<<Name(command.second.get<std::string>("repo-prefix")).append("delete")<<endl;
+        }else if(commandVerb == "delete-check"){
+
+        }else{
+            cout<<"command verb not supported"<<endl;
+        }
+    }
+    return 1;
+}

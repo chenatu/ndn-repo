@@ -39,7 +39,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       cout<<"one to one"<<endl;
       Interest i;
       i.setName(name);
-      i.setSelectors(rpara.getSelectors());
+      Selectors selectors;
       face_->expressInterest(i, 
         bind(&write_echo::onData, this, boost::ref(*face_), _1, _2, processId), 
         bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));

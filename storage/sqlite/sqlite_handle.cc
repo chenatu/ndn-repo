@@ -404,6 +404,7 @@ int sqlite_handle::check_data(const Interest& interest, Data& data){
 		return check_data_plain(name, data);
 	}else{
 		check_data_name(name, vname);
+		cout<<"check_data_name vname size:"<<vname.size()<<endl;
 		if(selectors.getMinSuffixComponents() >= 0){
 			if(!check_name_minsuffix(name, interest.getMinSuffixComponents(), vname))
 				return 0;
@@ -539,10 +540,12 @@ int sqlite_handle::check_data_name(const Name& name, vector<Name>& vname){
 			rc = sqlite3_step(pStmt);
 			if(rc == SQLITE_ROW){
 				childnum = sqlite3_column_int(pStmt, 3);
-				if(childnum == 0){
+				if(sqlite3_column_bytes(pStmt, 1) != 0){
 					Name ename;
-					ename.wireDecode(Block(sqlite3_column_blob(ppStmt, 0),sqlite3_column_bytes(ppStmt, 0)));
+					ename.wireDecode(Block(sqlite3_column_blob(pStmt, 0),sqlite3_column_bytes(pStmt, 0)));
 					vname.push_back(ename);
+				}
+				if(childnum == 0){
 					sqlite3_finalize(pStmt);
 					return 1;
 				}

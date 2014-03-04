@@ -18,6 +18,7 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
   cout<<"name:"<<name<<endl;
   if(validres_ == 1){    
     if(rpara.hasSelectors()){
+      cout<<"hasSelectors"<<endl;
       if(rpara.hasStartBlockId() || rpara.hasEndBlockId()){
         //has selector and blockid return 402
         repocommandresponse response;
@@ -109,31 +110,50 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
           return;
         }
       }else{
-        Name tmpname;
-        uint64_t deleteNum = 0;
-        uint64_t startBlockId = rpara.getStartBlockId();
-        uint64_t i = startBlockId;
-        while(1){
-          tmpname.wireDecode(name.wireEncode());
-          tmpname.appendSegment(i);
-          cout<<"seg:"<<i<<endl;
-          if(p_handle_->delete_data(tmpname) != 1){
-            break;
+        if(rpara.hasStartBlockId()){
+          Name tmpname;
+          uint64_t deleteNum = 0;
+          uint64_t startBlockId = rpara.getStartBlockId();
+          uint64_t i = startBlockId;
+          while(1){
+            tmpname.wireDecode(name.wireEncode());
+            tmpname.appendSegment(i);
+            cout<<"seg:"<<i<<endl;
+            if(p_handle_->delete_data(tmpname) != 1){
+              break;
+            }
+            deleteNum++;
           }
-          deleteNum++;
+          repocommandresponse response;
+          response.setStatusCode(200);
+          cout<<"200 no end delete"<<endl;
+          Data rdata(interest.getName());
+          if(rpara.hasProcessId()){
+            response.setProcessId(rpara.getProcessId());
+          }
+          response.setDeleteNum(deleteNum);
+          rdata.setContent(response.wireEncode());
+          keyChain_.sign(rdata);
+          face_->put(rdata);
+          return;
+        }else{
+          cout<<"one to one delete"<<endl;
+          uint64_t deleteNum = 0;
+          if(p_handle_->delete_data(name) == 1){
+            deleteNum == 1;
+          }
+          repocommandresponse response;
+          response.setStatusCode(200);
+          Data rdata(interest.getName());
+          if(rpara.hasProcessId()){
+            response.setProcessId(rpara.getProcessId());
+          }
+          response.setDeleteNum(deleteNum);
+          rdata.setContent(response.wireEncode());
+          keyChain_.sign(rdata);
+          face_->put(rdata);
+          return;
         }
-        repocommandresponse response;
-        response.setStatusCode(200);
-        cout<<"200 no end delete"<<endl;
-        Data rdata(interest.getName());
-        if(rpara.hasProcessId()){
-          response.setProcessId(rpara.getProcessId());
-        }
-        response.setDeleteNum(deleteNum);
-        rdata.setContent(response.wireEncode());
-        keyChain_.sign(rdata);
-        face_->put(rdata);
-        return;
       }
     }    
   }else if(validres_ == 0){

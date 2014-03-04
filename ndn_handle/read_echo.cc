@@ -1,8 +1,7 @@
 #include "read_echo.h"
 
 // Interest.
-void read_echo::operator()
-(const Name& prefix, const Interest& interest) {
+void read_echo::onInterest(const Name& prefix, const Interest& interest) {
   std::cout << "<< I: " << interest.getName() << std::endl;
 
   Name name = Name(interest.getName());
@@ -18,7 +17,13 @@ void read_echo::operator()
 }
 
 // onRegisterFailed.
-void read_echo::operator()(const Name& prefix, const std::string& reason){
+void read_echo::onRegisterFailed(const Name& prefix, const std::string& reason){
   std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
   face_->shutdown();
+}
+
+void read_echo::readListen(const Name& prefix){
+  (*face_).setInterestFilter(prefix,
+                            func_lib::bind(&read_echo::onInterest, this, _1, _2),
+                            func_lib::bind(&read_echo::onRegisterFailed, this, _1, _2));
 }

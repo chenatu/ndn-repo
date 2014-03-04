@@ -40,12 +40,15 @@ int main()
 {
   try {
     CommandInterestGenerator generator;
-    Name name("/a/b/c/f");
+    Name name("/a/b/c/delete");
     repocommandparameter rpara;
     rpara.setName("/a/b/c/d/8");
     Selectors selectors;
     selectors.setMinSuffixComponents(0);
     rpara.setSelectors(selectors);
+
+    /*rpara.setStartBlockId(5);
+    rpara.setEndBlockId(9);*/
 
     name.append(rpara.wireEncode());
     Interest i(name);

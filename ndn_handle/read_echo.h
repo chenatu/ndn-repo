@@ -12,10 +12,12 @@ public:
   }
   
   // onInterest. Read the name from database
-  void operator()(const Name& prefix, const Interest& interest);
+  void onInterest(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
-  void operator()(const Name& prefix, const std::string& reason);
+  void onRegisterFailed(const Name& prefix, const std::string& reason);
+
+  void readListen(const Name& prefix);
   const RegisteredPrefixId *id_;
 
 private:
