@@ -35,12 +35,15 @@ int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo&
 int main(int argc, char **argv) {
     int opt;
     string dbpath;
-    while ((opt = getopt(argc, argv, "d:h")) != -1) {
+    string confpath;
+    while ((opt = getopt(argc, argv, "d:hc:")) != -1) {
         switch (opt) {
         case 'd':
             dbpath = string(optarg);
         case 'h':
             cout<<ccnr_usage_message<<endl;
+        case 'c':
+            confpath = string(optarg);
         default:
             break;
         }
@@ -62,9 +65,10 @@ int main(int argc, char **argv) {
         read_echo recho(&face, p_handle);
         write_echo wecho(&face, p_handle, validator);
         delete_echo decho(&face, p_handle, validator);
-
-        conf_init(string("/home/guest/workspace/ndn_repo/test_json.conf"), recho, wecho, decho);
-
+        if(confpath.empty()){
+            confpath = "./repo.conf";
+        }
+        conf_init(confpath, recho, wecho, decho);
         face.processEvents();
     } catch (std::exception& e) {
         cout << "exception: " << e.what() << endl;
