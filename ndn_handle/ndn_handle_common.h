@@ -20,6 +20,9 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <map>
 
+#define TIMEOUTRETRY 3
+#define DEFAULTCREDIT 6
+
 using namespace std;
 using namespace ndn;
 using namespace nfd;
