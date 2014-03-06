@@ -96,7 +96,7 @@ int main()
     
     repocommandparameter rpara;
     rpara.setStartBlockId(0);
-    rpara.setEndBlockId(100);
+    rpara.setEndBlockId(1000);
 
     rpara.setName(Name("/a/b/c/d/8"));
 

@@ -40,11 +40,11 @@ public:
 
   //These three functions is for segmentation control
   //This function is to initiate fetching segmented data
-  void segInit(uint64_t processId);
+  void segInit(uint64_t processId, repocommandparameter rpara);
   //This function is control for send interests when onSegData
   void segOnDataControl(uint64_t processId, const Interest& interest);
   //This function is control for sending interest when onSegTimeout
-  void segOnTimeoutControl(uint64_t processId);
+  void segOnTimeoutControl(uint64_t processId, const Interest& interest);
 
   map<uint64_t, repocommandresponse> processMap;
 private:
@@ -58,6 +58,9 @@ private:
   map<uint64_t, uint64_t> nextSegMap_;
   map<uint64_t, map<uint64_t, int> > retryMap_;
   map<uint64_t, int> creditMap_;
+
+  int retrytime_;
+  int credit_;
 };
 
 #endif

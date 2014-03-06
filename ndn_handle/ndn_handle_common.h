@@ -21,7 +21,7 @@
 #include <map>
 
 #define TIMEOUTRETRY 3
-#define DEFAULTCREDIT 6
+#define DEFAULTCREDIT 12
 
 using namespace std;
 using namespace ndn;

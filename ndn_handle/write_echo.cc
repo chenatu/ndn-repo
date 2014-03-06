@@ -5,6 +5,8 @@ write_echo::write_echo(Face* face, storage_handle* p_handle, repovalidator valid
     : face_(face)
     , p_handle_(p_handle)
     , validator_(validator)
+    , retrytime_(TIMEOUTRETRY)
+    , credit_(DEFAULTCREDIT)
   {
     
   }
@@ -82,18 +84,6 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
             uint64_t processId = dist(gen);
 
             cout<<"processId: "<<processId<<endl;
-
-            repocommandresponse response;
-            response.setStatusCode(100);
-            response.setStartBlockId(startBlockId);
-            response.setEndBlockId(endBlockId);
-            response.setProcessId(processId);
-            Data rdata(interest.getName());
-            cout<<interest.getName()<<endl;
-            rdata.setContent(response.wireEncode());
-            keyChain_.sign(rdata);
-            face_->put(rdata);
-
             repocommandresponse mapresponse;
             mapresponse.setStatusCode(100);
             mapresponse.setProcessId(processId);
@@ -102,28 +92,13 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
             mapresponse.setEndBlockId(endBlockId);
             processMap.insert(pair<uint64_t, repocommandresponse>(processId, mapresponse));
 
-            creditMap_.insert(pair<uint64_t, int>(processId, 0));
-            map<uint64_t, int> mapretry;
+            Data rdata(interest.getName());
+            cout<<interest.getName()<<endl;
+            rdata.setContent(mapresponse.wireEncode());
+            keyChain_.sign(rdata);
+            face_->put(rdata);
 
-            Name tmpname;
-            Interest i;
-            uint64_t j;
-            for(j = startBlockId; j <= 6; j++){
-              tmpname.wireDecode(name.wireEncode());
-              tmpname.appendSegment(j);
-              i.setName(tmpname);
-              cout<<"seg:"<<j<<endl;
-              face_->expressInterest(i, 
-                bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId), 
-                bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
-              mapretry.insert(pair<uint64_t, int>(j, 0));
-            }
-
-            retryMap_.insert(pair<uint64_t, map<uint64_t, int> >(processId, mapretry));
-            queue<uint64_t> nextSegQueue;
-            nextSegQueue.push(7);
-            nextSegQueueMap_.insert(pair<uint64_t, queue<uint64_t> >(processId, nextSegQueue));
-            nextSegMap_.insert(pair<uint64_t, uint64_t>(processId, 7));
+            segInit(processId, rpara);
           }else{
             cout<<"start > end"<<endl;
             repocommandresponse response;
@@ -245,6 +220,8 @@ void write_echo::onTimeout(ndn::Face &face, const ndn::Interest& interest)
 
 void write_echo::onSegTimeout(ndn::Face &face, const Interest& interest, uint64_t processId){
   std::cout << "SegTimeout" << std::endl;
+
+  segOnTimeoutControl(processId, interest);
 }
 
 void write_echo::writeListen(const Name& prefix){
@@ -253,8 +230,33 @@ void write_echo::writeListen(const Name& prefix){
                             func_lib::bind(&write_echo::onRegisterFailed, this, _1, _2));
 }
 
-void write_echo::segInit(uint64_t processId){
+void write_echo::segInit(uint64_t processId, repocommandparameter rpara){
+  creditMap_.insert(pair<uint64_t, int>(processId, 0));
+  map<uint64_t, int> mapretry;
 
+  Name name = rpara.getName();
+
+  uint64_t startBlockId = rpara.getStartBlockId();
+
+  Name tmpname;
+  Interest i;
+  uint64_t j;
+  for(j = startBlockId; j <= credit_; j++){
+    tmpname.wireDecode(name.wireEncode());
+    tmpname.appendSegment(j);
+    i.setName(tmpname);
+    cout<<"seg:"<<j<<endl;
+    face_->expressInterest(i, 
+      bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId), 
+      bind(&write_echo::onSegTimeout, this, boost::ref(*face_), _1, processId));
+    mapretry.insert(pair<uint64_t, int>(j, 0));
+  }
+
+  retryMap_.insert(pair<uint64_t, map<uint64_t, int> >(processId, mapretry));
+  queue<uint64_t> nextSegQueue;
+  nextSegQueue.push(credit_ + 1);
+  nextSegQueueMap_.insert(pair<uint64_t, queue<uint64_t> >(processId, nextSegQueue));
+  nextSegMap_.insert(pair<uint64_t, uint64_t>(processId, credit_ + 1));
 }
 
 void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
@@ -263,7 +265,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
   map<uint64_t ,repocommandresponse>::iterator pit;
   pit = processMap.find(processId);
   if(pit == processMap.end()){
-    cout<<"no such processId: "<<processId;
+    cout<<"no such processId: "<<processId<<endl;
     return;
   }else{
     mapresponse = pit->second;
@@ -273,7 +275,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
   map<uint64_t, int>::iterator cit;
   cit = creditMap_.find(processId);
   if(cit == creditMap_.end()){
-    cout<<"no such processId: "<<processId;
+    cout<<"no such processId: "<<processId<<endl;
     return;
   }else{
     mapcredit = cit->second;
@@ -283,7 +285,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
   map<uint64_t, uint64_t>::iterator nit;
   nit = nextSegMap_.find(processId);
   if(nit == nextSegMap_.end()){
-    cout<<"no such processId: "<<processId;
+    cout<<"no such processId: "<<processId<<endl;
     return;
   }else{
     nextSeg = nit->second;
@@ -292,7 +294,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
   map<uint64_t, queue<uint64_t> >::iterator qit;
   qit = nextSegQueueMap_.find(processId);
   if(qit == nextSegQueueMap_.end()){
-    cout<<"no such processId: "<<processId;
+    cout<<"no such processId: "<<processId<<endl;
     return;
   }
 
@@ -301,11 +303,11 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
   map<uint64_t, map<uint64_t, int> >::iterator rit;
   rit = retryMap_.find(processId);
   if(rit == retryMap_.end()){
-    cout<<"no such processId: "<<processId;
+    cout<<"no such processId: "<<processId<<endl;
     return;
   }
 
-  //check whether this process has totall ends, if ends, remove control info from the maps
+  //check whether this process has total ends, if ends, remove control info from the maps
   uint64_t totalNum = mapresponse.getEndBlockId() - mapresponse.getStartBlockId() + 1;
   if(mapresponse.getInsertNum() >= totalNum){
     cout<<"process end 1: "<<processId<<endl;
@@ -338,7 +340,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
         int retrytime = 0;
         oit = rit->second.find(fetchedSeg);
         if(oit == rit->second.end()){
-          cout<<"no such fetchedSeg, something is wrong"<<processId;
+          cout<<"no such fetchedSeg, something is wrong"<<processId<<endl;
           processMap.erase(pit);
           nextSegQueueMap_.erase(qit);
           nextSegMap_.erase(nit);
@@ -356,6 +358,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
           face_->expressInterest(i,
             bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId),
             bind(&write_echo::onSegTimeout, this, boost::ref(*face_), _1, processId));
+          cout<<"sent seg: "<<sendingSeg<<endl;
           //found the retry map, if found, plus retry time, if not found, insert in the retry time
           oit = rit->second.find(sendingSeg);
           if(oit == rit->second.end()){
@@ -382,6 +385,103 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
 
 }
 
-void write_echo::segOnTimeoutControl(uint64_t processId){
+void write_echo::segOnTimeoutControl(uint64_t processId, const Interest& interest){
+  cout<<"segOnTimeoutControl: "<<processId<<endl;
+  repocommandresponse mapresponse;
+  map<uint64_t ,repocommandresponse>::iterator pit;
+  pit = processMap.find(processId);
+  if(pit == processMap.end()){
+    cout<<"no such processId: "<<processId<<endl;
+    return;
+  }else{
+    mapresponse = pit->second;
+  }
 
+  int mapcredit = 0;
+  map<uint64_t, int>::iterator cit;
+  cit = creditMap_.find(processId);
+  if(cit == creditMap_.end()){
+    cout<<"no such processId: "<<processId<<endl;
+    return;
+  }else{
+    mapcredit = cit->second;
+  }
+
+  int nextSeg = 0;
+  map<uint64_t, uint64_t>::iterator nit;
+  nit = nextSegMap_.find(processId);
+  if(nit == nextSegMap_.end()){
+    cout<<"no such processId: "<<processId<<endl;
+    return;
+  }else{
+    nextSeg = nit->second;
+  }
+
+  map<uint64_t, queue<uint64_t> >::iterator qit;
+  qit = nextSegQueueMap_.find(processId);
+  if(qit == nextSegQueueMap_.end()){
+    cout<<"no such processId: "<<processId<<endl;
+    return;
+  }
+
+  //just use rit as the map
+  map<uint64_t, map<uint64_t, int> >::iterator rit;
+  rit = retryMap_.find(processId);
+  if(rit == retryMap_.end()){
+    cout<<"no such processId: "<<processId<<endl;
+    return;
+  }
+
+  uint64_t timeoutSeg = interest.getName().get(interest.getName().size() - 1).toSeqNum();
+
+  cout<<"timeoutSeg: "<<timeoutSeg<<endl;
+  map<uint64_t, int>::iterator oit;
+  int retrytime = 0;
+  oit = rit->second.find(timeoutSeg);
+  if(oit == rit->second.end()){
+    cout<<"no such timeoutSeg, something is wrong"<<processId<<endl;;
+    processMap.erase(pit);
+    nextSegQueueMap_.erase(qit);
+    nextSegMap_.erase(nit);
+    retryMap_.erase(rit);
+    creditMap_.erase(cit);
+    return;
+  }else{
+    //check the retry time. If retry out of time, fail the process. if not, plus
+    retrytime = oit->second;
+    if(retrytime >= retrytime_){
+      //fail this process
+      cout<<"Retry timeout: "<<processId<<endl;
+      processMap.erase(pit);
+      nextSegQueueMap_.erase(qit);
+      nextSegMap_.erase(nit);
+      retryMap_.erase(rit);
+      creditMap_.erase(cit);
+      return;
+    }else{
+      //Reput it in the queue, retrytime++
+      retrytime++;
+      oit->second = retrytime;
+      qit->second.push(timeoutSeg);
+      if(mapcredit <= 0){
+        cout<<"timeout credit fails ends: "<<processId<<endl;
+        processMap.erase(pit);
+        nextSegQueueMap_.erase(qit);
+        nextSegMap_.erase(nit);
+        retryMap_.erase(rit);
+        creditMap_.erase(cit);
+        return;
+      }else{
+        Interest i;
+        Name timeoutName(interest.getName().getPrefix(-1));
+        timeoutName.appendSegment(timeoutSeg);
+        i.setName(timeoutName);
+        face_->expressInterest(i,
+          bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId),
+          bind(&write_echo::onSegTimeout, this, boost::ref(*face_), _1, processId));
+        mapcredit--;
+        cit->second = mapcredit;
+      }
+    }
+  }
 }
