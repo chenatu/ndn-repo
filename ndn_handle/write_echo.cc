@@ -133,11 +133,6 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
 void write_echo::onRegisterFailed(const Name& prefix, const std::string& reason){
 
 }
-
-// onInterest for insert check.
-void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
-
-}
   
 // onRegisterFailed for insert.
 void write_echo::onCheckRegisterFailed(const Name& prefix, const std::string& reason){
@@ -484,4 +479,64 @@ void write_echo::segOnTimeoutControl(uint64_t processId, const Interest& interes
       }
     }
   }
+}
+
+void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
+  validator_.validate(interest, bind(&write_echo::validated, this, _1), bind(&write_echo::validationFailed, this, _1));
+  
+  repocommandparameter rpara;
+  rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
+  Name name = rpara.getName();
+  cout<<"name:"<<name<<endl;
+  if(validres_ == 1){
+    if(rpara.hasProcessId()){
+      uint64_t processId = rpara.getProcessId();
+      repocommandresponse mapresponse;
+      map<uint64_t ,repocommandresponse>::iterator pit;
+      pit = processMap.find(processId);
+      if(pit == processMap.end()){
+        cout<<"no such processId: "<<processId<<endl;
+        repocommandresponse response;
+        response.setStatusCode(404);
+        Data rdata(interest.getName());
+        cout<<interest.getName()<<endl;
+        rdata.setContent(response.wireEncode());
+        keyChain_.sign(rdata);
+        face_->put(rdata);
+        return;
+      }else{
+        mapresponse = pit->second;
+        mapresponse.setStatusCode(300);
+        Data rdata(interest.getName());
+        cout<<interest.getName()<<endl;
+        rdata.setContent(mapresponse.wireEncode());
+        keyChain_.sign(rdata);
+        face_->put(rdata);
+      }
+    }else{
+      repocommandresponse response;
+      response.setStatusCode(404);
+      Data rdata(interest.getName());
+      cout<<interest.getName()<<endl;
+      rdata.setContent(response.wireEncode());
+      keyChain_.sign(rdata);
+      face_->put(rdata);
+    }
+  }else{
+    repocommandresponse response;
+    response.setStatusCode(401);
+    Data rdata(interest.getName());
+    cout<<interest.getName()<<endl;
+    rdata.setContent(response.wireEncode());
+    keyChain_.sign(rdata);
+    face_->put(rdata);
+    return;
+  }
+
+}
+
+void write_echo::writeCheckListen(const Name& prefix){
+  (*face_).setInterestFilter(prefix,
+                            func_lib::bind(&write_echo::onCheckInterest, this, _1, _2),
+                            func_lib::bind(&write_echo::onRegisterFailed, this, _1, _2));
 }

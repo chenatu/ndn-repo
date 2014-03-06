@@ -37,6 +37,8 @@ public:
 
   void writeListen(const Name& prefix);
 
+  void writeCheckListen(const Name& prefix);
+
 
   //These three functions is for segmentation control
   //This function is to initiate fetching segmented data

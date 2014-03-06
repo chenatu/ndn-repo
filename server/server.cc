@@ -104,7 +104,8 @@ int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo&
             wecho.writeListen(Name(command.second.get<std::string>("repo-prefix")).append("insert"));
             cout<<"writeListen: "<<Name(command.second.get<std::string>("repo-prefix")).append("insert")<<endl;
         }else if(commandVerb == "insert-check"){
-
+            wecho.writeCheckListen(Name(command.second.get<std::string>("repo-prefix")).append("insert-check"));
+            cout<<"writeCheckListen: "<<Name(command.second.get<std::string>("repo-prefix")).append("insert-check")<<endl;
         }else if(commandVerb == "delete"){
             decho.deleteListen(Name(command.second.get<std::string>("repo-prefix")).append("delete"));
             cout<<"deleteListen: "<<Name(command.second.get<std::string>("repo-prefix")).append("delete")<<endl;
