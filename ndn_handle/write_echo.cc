@@ -19,11 +19,6 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
   Name name = rpara.getName();
   cout<<"name:"<<name<<endl;
 
-  cout<<"startBlockId: "<<rpara.getStartBlockId()<<endl;
-  cout<<"hasStartBlockId: "<<rpara.hasStartBlockId()<<endl;
-  cout<<"endBlockId: "<<rpara.getEndBlockId()<<endl;
-  cout<<"hasEndBlockId: "<<rpara.hasEndBlockId()<<endl;
-
   if(validres_ == 1){
     if(!rpara.hasStartBlockId() && !rpara.hasEndBlockId()){
       // No Segment, just use selectors to fetch the data; one to one
