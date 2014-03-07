@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2013 Regents of the University of California.
+ * See COPYING for copyright and distribution information.
+ */
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-validator.hpp>
 #include <ndn-cpp-dev/util/random.hpp>

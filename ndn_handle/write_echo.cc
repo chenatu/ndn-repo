@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2013 Regents of the University of California.
+ * See COPYING for copyright and distribution information.
+ */
 #include "write_echo.h"
 
 

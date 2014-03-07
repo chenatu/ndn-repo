@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2013 Regents of the University of California.
+ * See COPYING for copyright and distribution information.
+ */
 #ifndef REPO_TLV_H
 #define REPO_TLV_H
 

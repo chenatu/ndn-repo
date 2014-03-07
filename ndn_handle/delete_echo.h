@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2013 Regents of the University of California.
+ * See COPYING for copyright and distribution information.
+ */
 #ifndef DELETE_ECHO_H
 #define DELETE_ECHO_H
 
