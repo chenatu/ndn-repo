@@ -8,7 +8,7 @@ write_echo::write_echo(Face* face, storage_handle* p_handle, repovalidator valid
     , retrytime_(TIMEOUTRETRY)
     , credit_(DEFAULTCREDIT)
   {
-    
+    noendTimeout_ = boost::posix_time::millisec(NOENDTIMEOUT);
   }
 // Interest.
 void write_echo::onInterest(const Name& prefix, const Interest& interest) {
@@ -18,6 +18,11 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
   rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
   Name name = rpara.getName();
   cout<<"name:"<<name<<endl;
+
+  cout<<"startBlockId: "<<rpara.getStartBlockId()<<endl;
+  cout<<"hasStartBlockId: "<<rpara.hasStartBlockId()<<endl;
+  cout<<"endBlockId: "<<rpara.getEndBlockId()<<endl;
+  cout<<"hasEndBlockId: "<<rpara.hasEndBlockId()<<endl;
 
   if(validres_ == 1){
     if(!rpara.hasStartBlockId() && !rpara.hasEndBlockId()){
@@ -113,6 +118,25 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
 
         }else{
           //no EndBlockId, so fetch FindalBlockId in data, if timeout, stop
+          boost::random::mt19937_64 gen(std::time(0));
+          boost::random::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFF);
+          uint64_t processId = dist(gen);
+
+          cout<<"processId: "<<processId<<endl;
+          repocommandresponse mapresponse;
+          mapresponse.setStatusCode(100);
+          mapresponse.setProcessId(processId);
+          mapresponse.setInsertNum(0);
+          mapresponse.setStartBlockId(rpara.getStartBlockId());
+          processMap.insert(pair<uint64_t, repocommandresponse>(processId, mapresponse));
+
+          Data rdata(interest.getName());
+          cout<<interest.getName()<<endl;
+          rdata.setContent(mapresponse.wireEncode());
+          keyChain_.sign(rdata);
+          face_->put(rdata);
+
+          segInit(processId, rpara);
         }
       }
     }
@@ -236,7 +260,18 @@ void write_echo::segInit(uint64_t processId, repocommandparameter rpara){
   Name tmpname;
   Interest i;
   uint64_t j;
-  for(j = startBlockId; j <= credit_; j++){
+
+  uint64_t initend = credit_;
+  if(rpara.hasEndBlockId()){
+    if((rpara.getEndBlockId() - rpara.getStartBlockId()) < credit_) {
+      initend = rpara.getEndBlockId() - rpara.getStartBlockId();
+    }
+  }else{
+    // set noendtimeout timer
+    boost::posix_time::ptime t1 = boost::posix_time::microsec_clock::local_time();
+    noendTimeoutMap_.insert(pair<uint64_t, boost::posix_time::ptime>(processId, t1));
+  }
+  for(j = startBlockId; j <= initend; j++){
     tmpname.wireDecode(name.wireEncode());
     tmpname.appendSegment(j);
     i.setName(tmpname);
@@ -252,6 +287,7 @@ void write_echo::segInit(uint64_t processId, repocommandparameter rpara){
   nextSegQueue.push(credit_ + 1);
   nextSegQueueMap_.insert(pair<uint64_t, queue<uint64_t> >(processId, nextSegQueue));
   nextSegMap_.insert(pair<uint64_t, uint64_t>(processId, credit_ + 1));
+
 }
 
 void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
@@ -302,16 +338,46 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
     return;
   }
 
+  //check whether notime timeout
+  if(!mapresponse.hasEndBlockId()){
+    map<uint64_t, boost::posix_time::ptime>::iterator tit;
+    tit = noendTimeoutMap_.find(processId);
+    if(tit == noendTimeoutMap_.end()){
+      cout<<"no such processId: "<<processId<<endl;
+      return;
+    }
+    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = now - tit->second;
+    if(diff > noendTimeout_){
+      cout<<"noendtimeout: "<<processId<<endl;
+      processMap.erase(pit);
+      nextSegQueueMap_.erase(qit);
+      nextSegMap_.erase(nit);
+      retryMap_.erase(rit);
+      creditMap_.erase(cit);
+      noendTimeoutMap_.erase(tit);
+      return;
+    }
+  }
+
   //check whether this process has total ends, if ends, remove control info from the maps
-  uint64_t totalNum = mapresponse.getEndBlockId() - mapresponse.getStartBlockId() + 1;
-  if(mapresponse.getInsertNum() >= totalNum){
-    cout<<"process end 1: "<<processId<<endl;
-    processMap.erase(pit);
-    nextSegQueueMap_.erase(qit);
-    nextSegMap_.erase(nit);
-    retryMap_.erase(rit);
-    creditMap_.erase(cit);
-    return;
+  if(mapresponse.hasEndBlockId()){
+    uint64_t totalNum = mapresponse.getEndBlockId() - mapresponse.getStartBlockId() + 1;
+    if(mapresponse.getInsertNum() >= totalNum){
+      cout<<"process end 1: "<<processId<<endl;
+      processMap.erase(pit);
+      nextSegQueueMap_.erase(qit);
+      nextSegMap_.erase(nit);
+      retryMap_.erase(rit);
+      creditMap_.erase(cit);
+
+      map<uint64_t, boost::posix_time::ptime>::iterator tit;
+      tit = noendTimeoutMap_.find(processId);
+      if(tit != noendTimeoutMap_.end()){
+        noendTimeoutMap_.erase(tit);
+      }
+      return;
+    }
   }
 
   mapcredit++;
@@ -341,6 +407,12 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
           nextSegMap_.erase(nit);
           retryMap_.erase(rit);
           creditMap_.erase(cit);
+
+          map<uint64_t, boost::posix_time::ptime>::iterator tit;
+          tit = noendTimeoutMap_.find(processId);
+          if(tit != noendTimeoutMap_.end()){
+            noendTimeoutMap_.erase(tit);
+          }
           return;
         }else{
           //find this fetched data, remove it from this map
@@ -512,6 +584,20 @@ void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
         rdata.setContent(mapresponse.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
+
+        //check if noendtimeout
+        if(!mapresponse.hasEndBlockId()){
+          map<uint64_t, boost::posix_time::ptime>::iterator tit;
+          tit = noendTimeoutMap_.find(processId);
+          if(tit == noendTimeoutMap_.end()){
+            cout<<"no such processid"<<processId<<endl;
+            return;
+          }
+
+          //refresh the time
+          boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+          tit->second = now;
+        }
       }
     }else{
       repocommandresponse response;

@@ -24,8 +24,8 @@ public:
   }
   repocommandparameter(const Block& block)
   {
-    startBlockId_ = 0;
-    endBlockId_ = 0;
+    hasStartBlockId_ = 0;
+    hasEndBlockId_ = 0;
     hasProcessId_ = 0;
     wireDecode(block);
   }
@@ -169,7 +169,7 @@ repocommandparameter::wireEncode(EncodingImpl<T>& blk) const
   }
 
 //prepare startblockid
-  if(hasEndBlockId_){
+  if(hasStartBlockId_){
     var_len = blk.prependNonNegativeInteger (startBlockId_);
     total_len += var_len;
     total_len += blk.prependVarNumber (var_len);

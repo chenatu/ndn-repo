@@ -95,8 +95,8 @@ int main()
     Name name("/a/b/c/insert");
     
     repocommandparameter rpara;
-    rpara.setStartBlockId(0);
-    rpara.setEndBlockId(1000);
+    rpara.setStartBlockId(1);
+    //rpara.setEndBlockId(1000);
 
     rpara.setName(Name("/a/b/c/d/8"));
 

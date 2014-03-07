@@ -60,9 +60,11 @@ private:
   map<uint64_t, uint64_t> nextSegMap_;
   map<uint64_t, map<uint64_t, int> > retryMap_;
   map<uint64_t, int> creditMap_;
+  map<uint64_t, boost::posix_time::ptime> noendTimeoutMap_;
 
   int retrytime_;
   int credit_;
+  boost::posix_time::time_duration noendTimeout_;
 };
 
 #endif
