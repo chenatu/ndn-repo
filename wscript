@@ -60,35 +60,35 @@ def build (bld):
             includes = ".",
             )
         bld (
-            target = "producer",
+            target = "test/producer",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/producer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
-            target = "consumer",
+            target = "test/consumer",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/consumer.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
-            target = "test-command-interest",
+            target = "test/test-command-interest",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/test-command-interest.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
-            target = "insert_client",
+            target = "test/insert_client",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/insert_client.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
-            target = "delete_client",
+            target = "test/delete_client",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/delete_client.cc','ndn_handle/*.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
