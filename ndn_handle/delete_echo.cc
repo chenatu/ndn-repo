@@ -19,10 +19,10 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
   repocommandparameter rpara;
   rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
   Name name = rpara.getName();
-  cout<<"name:"<<name<<endl;
+  //cout<<"name:"<<name<<endl;
   if(validres_ == 1){    
     if(rpara.hasSelectors()){
-      cout<<"hasSelectors"<<endl;
+      //cout<<"hasSelectors"<<endl;
       if(rpara.hasStartBlockId() || rpara.hasEndBlockId()){
         //has selector and blockid return 402
         repocommandresponse response;
@@ -46,15 +46,15 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
         p_handle_->check_name_any(name, selectors, vname);
         vector<Name>::iterator it;
         int i = 0;
-        cout<<"vname size: "<<vname.size()<<endl;
+        //cout<<"vname size: "<<vname.size()<<endl;
         for(it = vname.begin(), i = 0; it < vname.end(); it++, i++){
-          cout<<"seg: "<<i<<endl;
-          cout<<"name: "<<*it<<endl;
+          //cout<<"seg: "<<i<<endl;
+          //cout<<"name: "<<*it<<endl;
           if(p_handle_->delete_data(*it) == 1){
             deleteNum++;
           }
         }
-        cout<<"Selectors Delete Complete"<<endl;
+        //cout<<"Selectors Delete Complete"<<endl;
         //All data has been deleted, return 200
         repocommandresponse response;
         response.setStatusCode(200);
@@ -63,7 +63,7 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
           response.setProcessId(rpara.getProcessId());
         }
         response.setDeleteNum(deleteNum);
-        cout<<interest.getName()<<endl;
+        //cout<<interest.getName()<<endl;
         rdata.setContent(response.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
@@ -82,13 +82,13 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
           for(int i = startBlockId; i <= endBlockId; i++){
             tmpname.wireDecode(name.wireEncode());
             tmpname.appendSegment(i);
-            cout<<"seg:"<<i<<endl;
+            //cout<<"seg:"<<i<<endl;
             if(p_handle_->delete_data(tmpname) == 1){
               deleteNum++;
             }
           }
           //All the data deleted, return 200
-          cout<<"seg delete"<<endl;
+          //cout<<"seg delete"<<endl;
           repocommandresponse response;
           response.setStatusCode(200);
           Data rdata(interest.getName());
@@ -122,7 +122,7 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
           while(1){
             tmpname.wireDecode(name.wireEncode());
             tmpname.appendSegment(i);
-            cout<<"seg:"<<i<<endl;
+            //cout<<"seg:"<<i<<endl;
             if(p_handle_->delete_data(tmpname) != 1){
               break;
             }
@@ -141,7 +141,7 @@ void delete_echo::onInterest(const Name& prefix, const Interest& interest) {
           face_->put(rdata);
           return;
         }else{
-          cout<<"one to one delete"<<endl;
+          //cout<<"one to one delete"<<endl;
           uint64_t deleteNum = 0;
           if(p_handle_->delete_data(name) == 1){
             deleteNum == 1;

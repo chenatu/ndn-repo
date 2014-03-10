@@ -166,7 +166,7 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 
 	if(check_name(name)){
 		string update_sql2 = string("UPDATE NDN_REPO SET data = ? WHERE name = ?;");
-		cout<<"update"<<endl;
+		//cout<<"update"<<endl;
 		sqlite3_stmt* pu2Stmt = NULL;
 		if(sqlite3_prepare_v2(db, update_sql2.c_str(), -1, &pu2Stmt, NULL) != SQLITE_OK){
 			sqlite3_finalize(pu2Stmt);

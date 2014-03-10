@@ -21,7 +21,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
   repocommandparameter rpara;
   rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
   Name name = rpara.getName();
-  cout<<"name:"<<name<<endl;
+  //cout<<"name:"<<name<<endl;
 
   if(validres_ == 1){
     if(!rpara.hasStartBlockId() && !rpara.hasEndBlockId()){
@@ -37,19 +37,19 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       response.setStatusCode(100);
       response.setProcessId(processId);
       Data rdata(interest.getName());
-      cout<<interest.getName()<<endl;
+      //cout<<interest.getName()<<endl;
       rdata.setContent(response.wireEncode());
       keyChain_.sign(rdata);
       face_->put(rdata);
 
-      cout<<"one to one"<<endl;
+      //cout<<"one to one"<<endl;
       Interest i;
       i.setName(name);
       Selectors selectors;
       face_->expressInterest(i, 
         bind(&write_echo::onData, this, boost::ref(*face_), _1, _2, processId), 
         bind(&write_echo::onTimeout, this, boost::ref(*face_), _1));
-      cout<<"repo interest express"<<i.getName()<<endl;
+      //cout<<"repo interest express"<<i.getName()<<endl;
       repocommandresponse mapresponse;
       mapresponse.setStatusCode(100);
       mapresponse.setProcessId(processId);
@@ -57,15 +57,15 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
       processMap.insert(pair<uint64_t, repocommandresponse>(processId,mapresponse));
     }else{
       //segmented
-      cout<<"segmented"<<endl;
+      //cout<<"segmented"<<endl;
 
       if(rpara.hasSelectors()){
         //has selectors, return  402
-        cout<<"has selectors"<<endl;
+        //cout<<"has selectors"<<endl;
         repocommandresponse response;
         response.setStatusCode(402);
         Data rdata(interest.getName());
-        cout<<interest.getName()<<endl;
+        //cout<<interest.getName()<<endl;
         rdata.setContent(response.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);
@@ -80,14 +80,14 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
 
           uint64_t startBlockId = rpara.getStartBlockId();
           uint64_t endBlockId = rpara.getEndBlockId();
-          cout<<"startBlockId: "<<startBlockId<<endl;
-          cout<<"endBlockId: "<<endBlockId<<endl;
+          //cout<<"startBlockId: "<<startBlockId<<endl;
+          //cout<<"endBlockId: "<<endBlockId<<endl;
           if(startBlockId <= endBlockId){           
             boost::random::mt19937_64 gen(std::time(0));
             boost::random::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFF);
             uint64_t processId = dist(gen);
 
-            cout<<"processId: "<<processId<<endl;
+            //cout<<"processId: "<<processId<<endl;
             repocommandresponse mapresponse;
             mapresponse.setStatusCode(100);
             mapresponse.setProcessId(processId);
@@ -97,18 +97,18 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
             processMap.insert(pair<uint64_t, repocommandresponse>(processId, mapresponse));
 
             Data rdata(interest.getName());
-            cout<<interest.getName()<<endl;
+            //cout<<interest.getName()<<endl;
             rdata.setContent(mapresponse.wireEncode());
             keyChain_.sign(rdata);
             face_->put(rdata);
 
             segInit(processId, rpara);
           }else{
-            cout<<"start > end"<<endl;
+            //cout<<"start > end"<<endl;
             repocommandresponse response;
             response.setStatusCode(403);
             Data rdata(interest.getName());
-            cout<<interest.getName()<<endl;
+            //cout<<interest.getName()<<endl;
             rdata.setContent(response.wireEncode());
             keyChain_.sign(rdata);
             face_->put(rdata);
@@ -121,7 +121,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
           boost::random::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFF);
           uint64_t processId = dist(gen);
 
-          cout<<"processId: "<<processId<<endl;
+          //cout<<"processId: "<<processId<<endl;
           repocommandresponse mapresponse;
           mapresponse.setStatusCode(100);
           mapresponse.setProcessId(processId);
@@ -130,7 +130,7 @@ void write_echo::onInterest(const Name& prefix, const Interest& interest) {
           processMap.insert(pair<uint64_t, repocommandresponse>(processId, mapresponse));
 
           Data rdata(interest.getName());
-          cout<<interest.getName()<<endl;
+          //cout<<interest.getName()<<endl;
           rdata.setContent(mapresponse.wireEncode());
           keyChain_.sign(rdata);
           face_->put(rdata);
@@ -174,9 +174,9 @@ void write_echo::validationFailed(const shared_ptr<const Interest>& interest){
 
 void write_echo::onData(ndn::Face &face, const ndn::Interest& interest, ndn::Data& data, uint64_t processId)
 {
-  cout<<"onData"<<endl;
-  cout << "I: " << interest.toUri() << endl;
-  cout << "D: " << data.getName().toUri() << endl;
+  //cout<<"onData"<<endl;
+  //cout << "I: " << interest.toUri() << endl;
+  //cout << "D: " << data.getName().toUri() << endl;
   map<uint64_t ,repocommandresponse>::iterator it;;
   it = processMap.find(processId);
   repocommandresponse mapresponse;
@@ -187,17 +187,17 @@ void write_echo::onData(ndn::Face &face, const ndn::Interest& interest, ndn::Dat
     mapresponse = it->second;
   }
   if(mapresponse.getInsertNum() == 0){
-    cout << "start to insert"<<endl;
+    //cout << "start to insert"<<endl;
     p_handle_->insert_data(interest, data);
-    cout << "end of insert"<<endl;
+    //cout << "end of insert"<<endl;
   }
   processMap.erase(it);
 }
 
 void write_echo::onSegData(ndn::Face &face, const Interest& interest, Data& data, uint64_t processId)
 {
-  cout << "I: " << interest.toUri() << endl;
-  cout << "D: " << data.getName().toUri() << endl;
+  //cout << "I: " << interest.toUri() << endl;
+  //cout << "D: " << data.getName().toUri() << endl;
   //retrieve the process from the responsemap
   map<uint64_t ,repocommandresponse>::iterator it;
   it = processMap.find(processId);
@@ -220,11 +220,11 @@ void write_echo::onSegData(ndn::Face &face, const Interest& interest, Data& data
   
 
   //insert data
-  cout << "start to insert"<<endl;
+  //cout << "start to insert"<<endl;
   if(p_handle_->insert_data(interest, data) == 1){
     mapresponse.setInsertNum(mapresponse.getInsertNum() + 1);
   }
-  cout << "end of insert"<<endl;
+  //cout << "end of insert"<<endl;
 
   it->second = mapresponse;
 
@@ -274,7 +274,7 @@ void write_echo::segInit(uint64_t processId, repocommandparameter rpara){
     tmpname.wireDecode(name.wireEncode());
     tmpname.appendSegment(j);
     i.setName(tmpname);
-    cout<<"seg:"<<j<<endl;
+    //cout<<"seg:"<<j<<endl;
     face_->expressInterest(i, 
       bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId), 
       bind(&write_echo::onSegTimeout, this, boost::ref(*face_), _1, processId));
@@ -290,7 +290,7 @@ void write_echo::segInit(uint64_t processId, repocommandparameter rpara){
 }
 
 void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
-  cout<<"segOnDataControl: "<<processId<<endl;
+  //cout<<"segOnDataControl: "<<processId<<endl;
   repocommandresponse mapresponse;
   map<uint64_t ,repocommandresponse>::iterator pit;
   pit = processMap.find(processId);
@@ -424,7 +424,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
           face_->expressInterest(i,
             bind(&write_echo::onSegData, this, boost::ref(*face_), _1, _2, processId),
             bind(&write_echo::onSegTimeout, this, boost::ref(*face_), _1, processId));
-          cout<<"sent seg: "<<sendingSeg<<endl;
+          //cout<<"sent seg: "<<sendingSeg<<endl;
           //found the retry map, if found, plus retry time, if not found, insert in the retry time
           oit = rit->second.find(sendingSeg);
           if(oit == rit->second.end()){
@@ -452,7 +452,7 @@ void write_echo::segOnDataControl(uint64_t processId, const Interest& interest){
 }
 
 void write_echo::segOnTimeoutControl(uint64_t processId, const Interest& interest){
-  cout<<"segOnTimeoutControl: "<<processId<<endl;
+  //cout<<"segOnTimeoutControl: "<<processId<<endl;
   repocommandresponse mapresponse;
   map<uint64_t ,repocommandresponse>::iterator pit;
   pit = processMap.find(processId);
@@ -558,7 +558,7 @@ void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
   repocommandparameter rpara;
   rpara.wireDecode(interest.getName().get(prefix.size()).blockFromValue());
   Name name = rpara.getName();
-  cout<<"name:"<<name<<endl;
+  //cout<<"name:"<<name<<endl;
   if(validres_ == 1){
     if(rpara.hasProcessId()){
       uint64_t processId = rpara.getProcessId();
@@ -579,7 +579,7 @@ void write_echo::onCheckInterest(const Name& prefix, const Interest& interest){
         mapresponse = pit->second;
         mapresponse.setStatusCode(300);
         Data rdata(interest.getName());
-        cout<<interest.getName()<<endl;
+        //cout<<interest.getName()<<endl;
         rdata.setContent(mapresponse.wireEncode());
         keyChain_.sign(rdata);
         face_->put(rdata);

@@ -10,6 +10,7 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 #include <iostream>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "../helper/repocommandparameter.h"
 //#include "face.hpp"
@@ -30,19 +31,19 @@ public:
   void
   onInterest(const Name& name, const Interest& interest)
   {
-    cout<<"onInterest"<<endl;
+    //cout<<"onInterest"<<endl;
     std::cout << "<< I: " << interest << std::endl;
     
     ndn::Data data(ndn::Name(interest.getName()));
     //cout<<<<interest.getName()<<endl;
-    cout<<"data.getName(): "<<data.getName()<<endl;
+    //cout<<"data.getName(): "<<data.getName()<<endl;
     data.setFreshnessPeriod(1000); // 10 sec
 
     data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
 
     keyChain_.sign(data);
 
-    cout << ">> D: " << data.getName().toUri() << std::endl;
+    //cout << ">> D: " << data.getName().toUri() << std::endl;
     face_->put(data);
   }
 
