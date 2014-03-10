@@ -8,6 +8,8 @@
 
 #include "../storage/sqlite/sqlite_handle.h"
 #include <ndn-cpp-dev/security/key-chain.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 
 using namespace std;
 using namespace ndn;
@@ -30,16 +32,14 @@ int main(int argc, char **argv) {
             break;
         }
     }
-    sqlite_handle handle = sqlite_handle(dbpath);
+   sqlite_handle handle = sqlite_handle(dbpath);
 
     KeyChain keyChain;
 
-    Name name("/a/b/c/d/8");
-    Data data(name);
-    data.setFreshnessPeriod(2000); // 10 sec
-    data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
-    keyChain.sign(data);
-    cout<<"data size: "<<data.wireEncode().size()<<endl;
+    Name name("/a/8");
+    uint8_t content[10000];
+    memset(content, '-', 10000);
+    /*cout<<"data size: "<<data.wireEncode().size()<<endl;
     cout<<data.wireEncode().wire()<<endl;
 
     cout<<"data: "<<data.getName().toUri()<<endl;
@@ -64,11 +64,34 @@ int main(int argc, char **argv) {
 
     Interest interest2;
     interest2.setName(name2);
-    Interest interest3;
-
+    Interest interest3;*/
     Data newdata;
+    Interest i;
+    boost::posix_time::ptime t1 = boost::posix_time::microsec_clock::local_time();
+    Name tmpname;   
+    cout<<"start"<<endl;
+    int j = 0;
+    for(j = 1; j <= 1000; j++){
+        tmpname.wireDecode(name.wireEncode());
+        tmpname.appendSegment(j);
+        i.setName(tmpname);
+        Data data(tmpname);
+        data.setContent((const uint8_t*)content, sizeof(content));
+        keyChain.sign(data);
+        //cout<<"tmpname: "<<tmpname<<endl;
+        //cout<<"seg:"<<j<<endl;
+        handle.insert_data(tmpname, data); 
+       //handle.delete_data(tmpname);
+        //cout<<j<<endl;
+    }
+    boost::posix_time::ptime t2 = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = t2 - t1;
+
+    cout<<diff<<endl;
+    cout<<"end"<<endl;
+    //Data newdata;
     //handle.insert_data(name2, data2);
-    handle.insert_data(name, data);
+    //handle.insert_data(name, data);
     //handle.check_data(interest, newdata);
     //cout<<"newdata size: "<<newdata.wireEncode().size()<<endl;
     //cout<<newdata.wireEncode().wire()<<endl;

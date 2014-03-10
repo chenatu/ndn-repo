@@ -53,7 +53,7 @@ def build (bld):
         )
     if bld.env.TEST:
         bld (
-            target = "test_sqlite",
+            target = "test/test_sqlite",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/test_sqlite.cc','storage/*.cc','storage/sqlite/*.cc', 'helper/*.cc']),
             use = 'BOOST SQLITE3 NDNCPPDEV',

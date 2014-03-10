@@ -10,8 +10,8 @@ sqlite_handle::sqlite_handle(){
 	string home(getenv("HOME"));
 	string rpath = home + string("/.ndn/ndn_repo.db");
 	int rc = sqlite3_open(rpath.c_str(), &db);
+	char *zErrMsg = 0;
 	if(rc == SQLITE_OK){
-		char *zErrMsg = 0;
 		//The name is without component version and segment, The data is the whole Class Data containg name, digest and other component
 		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB, childnum INTEGER);"
 			, NULL, 0, &zErrMsg);
@@ -73,11 +73,14 @@ sqlite_handle::sqlite_handle(){
 	    }  
 	    sqlite3_finalize(pStmt);
 	}
+	sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg);
+	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
 }
 
 sqlite_handle::sqlite_handle(string dbpath){
 	set_storage_method(STORAGE_METHOD_SQLITE);
 	int rc;
+	char *zErrMsg = 0;
 	if(dbpath.empty()){
 		string home(getenv("HOME"));
 		string path = home + string("/.ndn/ndn_repo.db");
@@ -85,9 +88,7 @@ sqlite_handle::sqlite_handle(string dbpath){
 	}else{
 		rc = sqlite3_open(dbpath.c_str(), &db);
 	}
-	if(rc == SQLITE_OK){
-		char *zErrMsg = 0;
-		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB, childnum INTEGER);"
+	if(rc == SQLITE_OK){		rc = sqlite3_exec(db, "create table if not exists NDN_REPO (name BLOB PRIMARY KEY, data BLOB, pname BLOB, childnum INTEGER);"
 			, NULL, 0, &zErrMsg);
 		if(rc != SQLITE_OK){
 			cout<<zErrMsg<<" rc:"<<rc<<endl;
@@ -145,6 +146,8 @@ sqlite_handle::sqlite_handle(string dbpath){
 	    }  
 	    sqlite3_finalize(pStmt);
 	}
+	sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg);
+	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
 }
 
 sqlite_handle::~sqlite_handle(){
@@ -501,13 +504,15 @@ int sqlite_handle::check_data_plain(Name& name, Data& data){
 			    }
 			}
 			sort_data_small(vdata);
-			if(vdata.begin()->getContent().empty()){
+			if(vdata.empty()){
+				cout<<"no such data"<<tmpname<<endl;
+			}else if(vdata.begin()->getContent().empty()){
 				cout<<"no such data"<<tmpname<<endl;
 			}
 		    data.wireDecode(vdata.begin()->wireEncode());
 		    /*cout<<"check_data size: "<<data.wireEncode().size()<<endl;
 		    cout<<"name: "<<data.getName()<<endl;*/
-	    	cout<<data.wireEncode().wire()<<endl;
+	    	//cout<<data.wireEncode().wire()<<endl;
 		    sqlite3_finalize(pStmt);
 		} else{
 			cout<<"pStmt prepared failed rc:"<<rc<<endl;
