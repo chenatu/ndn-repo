@@ -12,7 +12,7 @@
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "../helper/repo-command-parameter.hpp"
+#include "../helpers/repo-command-parameter.hpp"
 //#include "face.hpp"
 
 using namespace std;

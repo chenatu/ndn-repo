@@ -47,7 +47,7 @@ def build (bld):
     bld (
         target = "ndn-repo",
         features = ["cxx", "cxxprogram"],
-        source = bld.path.ant_glob(['server/server.cpp', 'ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+        source = bld.path.ant_glob(['server/server.cpp', 'ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
         use = 'BOOST SQLITE3 NDNCPPDEV',
         includes = ".",
         )
@@ -55,42 +55,42 @@ def build (bld):
         bld (
             target = "test/test-sqlite",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/test-sqlite.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/test-sqlite.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
             target = "test/producer",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/producer.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/producer.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
             target = "test/consumer",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/consumer.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/consumer.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
             target = "test/test-command-interest",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/test-command-interest.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/test-command-interest.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
             target = "test/insert-client",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/insert-client.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/insert-client.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )
         bld (
             target = "test/delete-client",
             features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/delete-client.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helper/*.cpp']),
+            source = bld.path.ant_glob(['test/delete-client.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
             use = 'BOOST SQLITE3 NDNCPPDEV',
             includes = ".",
             )

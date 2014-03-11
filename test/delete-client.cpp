@@ -9,7 +9,7 @@
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
-#include "../helper/repo-command-parameter.hpp"
+#include "../helpers/repo-command-parameter.hpp"
 #include <iostream>
 //#include "face.hpp"
 

@@ -18,7 +18,7 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
 #include <assert.h>
-//#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
+//#include <ndn-cpp-dev/helpers/command-interest-validator.hpp>
 
 #include "../storage/storage-handle.hpp"
 #include "../storage/sqlite/sqlite-handle.hpp"
