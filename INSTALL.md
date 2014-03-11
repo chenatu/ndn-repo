@@ -1,4 +1,4 @@
-ndn_repo:  A basic version of NDN repository
+ndn-repo:  A basic version of NDN repository
 ===========================================================================
 
 Prerequisites

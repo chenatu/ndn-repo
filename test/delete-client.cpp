@@ -9,7 +9,7 @@
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
-#include "../helper/repocommandparameter.h"
+#include "../helper/repo-command-parameter.hpp"
 #include <iostream>
 //#include "face.hpp"
 
@@ -41,7 +41,7 @@ int main()
   try {
     CommandInterestGenerator generator;
     Name name("/a/b/c/delete");
-    repocommandparameter rpara;
+    RepoCommandParameter rpara;
     rpara.setName("/a/b/c/d/8");
     Selectors selectors;
     selectors.setMinSuffixComponents(0);

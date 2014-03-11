@@ -2,9 +2,9 @@
  * Copyright (C) 2013 Regents of the University of California.
  * See COPYING for copyright and distribution information.
  */
-#include "sqlite_handle.h"
+#include "sqlite-handle.hpp"
 
-sqlite_handle::sqlite_handle(){
+SqliteHandle::SqliteHandle(){
 	set_storage_method(STORAGE_METHOD_SQLITE);
 	//Open the database in default place
 	string home(getenv("HOME"));
@@ -77,7 +77,7 @@ sqlite_handle::sqlite_handle(){
 	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
 }
 
-sqlite_handle::sqlite_handle(string dbpath){
+SqliteHandle::SqliteHandle(string dbpath){
 	set_storage_method(STORAGE_METHOD_SQLITE);
 	int rc;
 	char *zErrMsg = 0;
@@ -150,14 +150,15 @@ sqlite_handle::sqlite_handle(string dbpath){
 	sqlite3_exec(db, "PRAGMA journal_mode = MEMORY", NULL, NULL, &zErrMsg);
 }
 
-sqlite_handle::~sqlite_handle(){
+SqliteHandle::~SqliteHandle(){
 	sqlite3_close(db);
 }
 
 
 //Temporarily assigned the datatype of every component. needs to be further discussed
 
-int sqlite_handle::insert_data(const Interest& interest, Data& data){
+int 
+SqliteHandle::insert_data(const Interest& interest, Data& data){
 	Name name = data.getName();
 
 	if(name.empty()){
@@ -263,7 +264,8 @@ int sqlite_handle::insert_data(const Interest& interest, Data& data){
 	return 1;
 }
 
-int sqlite_handle::delete_data(const Name& name){
+int 
+SqliteHandle::delete_data(const Name& name){
 	sqlite3_stmt* pqStmt = NULL;
 	sqlite3_stmt* pdStmt = NULL;
 	sqlite3_stmt* puStmt = NULL;
@@ -402,7 +404,8 @@ int sqlite_handle::delete_data(const Name& name){
 	return 1;
 }
 
-int sqlite_handle::check_data(const Interest& interest, Data& data){
+int 
+SqliteHandle::check_data(const Interest& interest, Data& data){
 	Name name = interest.getName();
 	Selectors selectors = interest.getSelectors();
 	vector<Name> vname;
@@ -438,7 +441,8 @@ int sqlite_handle::check_data(const Interest& interest, Data& data){
 }
 
 //This function is the first version of data check following longest prefix match. It will return the leftmost data
-int sqlite_handle::check_data_plain(Name& name, Data& data){
+int 
+SqliteHandle::check_data_plain(Name& name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
 	sqlite3_stmt* ppStmt = NULL;
 	//string sql = string("select * from NDN_REPO where name = ?;");
@@ -528,7 +532,8 @@ int sqlite_handle::check_data_plain(Name& name, Data& data){
 }
 
 //retrieve all the leaf nodes of a subtree
-int sqlite_handle::check_data_name(const Name& name, vector<Name>& vname){
+int 
+SqliteHandle::check_data_name(const Name& name, vector<Name>& vname){
 	if(name.empty()){
 		cout<<"The name is empty"<<endl;
 		return 0;
@@ -616,7 +621,8 @@ int sqlite_handle::check_data_name(const Name& name, vector<Name>& vname){
 	}
 }
 
-int sqlite_handle::check_name_minsuffix(const Name& name, int minSuffixComponents, vector<Name>& vname){
+int 
+SqliteHandle::check_name_minsuffix(const Name& name, int minSuffixComponents, vector<Name>& vname){
 	int mincomp = name.size() + minSuffixComponents;
 	int last = 0;
 	for(int i=0; i<vname.size(); i++, last++){
@@ -632,7 +638,8 @@ int sqlite_handle::check_name_minsuffix(const Name& name, int minSuffixComponent
 	return 1;
 }
 
-int sqlite_handle::check_name_maxsuffix(const Name& name, int maxSuffixComponents, vector<Name>& vname){
+int 
+SqliteHandle::check_name_maxsuffix(const Name& name, int maxSuffixComponents, vector<Name>& vname){
 	int mincomp = name.size() + maxSuffixComponents;
 	int last = 0;
 	for(int i=0; i<vname.size(); i++, last++){
@@ -648,7 +655,8 @@ int sqlite_handle::check_name_maxsuffix(const Name& name, int maxSuffixComponent
 	return 1;
 }
 
-int sqlite_handle::check_name_exclude(const Name& name, const Exclude& exclude, vector<Name>& vname){
+int 
+SqliteHandle::check_name_exclude(const Name& name, const Exclude& exclude, vector<Name>& vname){
 	int exCompNum = name.size();
 	int last = 0;
 	for(int i=0; i<vname.size(); ++i, ++last){
@@ -665,7 +673,8 @@ int sqlite_handle::check_name_exclude(const Name& name, const Exclude& exclude, 
 }
 
 
-int sqlite_handle::check_name_child(const Name& name, int childselector, vector<Name>& vname, Name& resname){
+int 
+SqliteHandle::check_name_child(const Name& name, int childselector, vector<Name>& vname, Name& resname){
 	if(childselector == 0){
 		sort_name_small(vname);
 		if(vname.size() > 0){
@@ -686,7 +695,8 @@ int sqlite_handle::check_name_child(const Name& name, int childselector, vector<
 	return 1;
 }
 
-int sqlite_handle::check_name_any(const Name& name, const Selectors& selectors, 	vector<Name>& vname){
+int 
+SqliteHandle::check_name_any(const Name& name, const Selectors& selectors, 	vector<Name>& vname){
 	if(selectors.empty()){
 		if(check_name(name)){
 			vname.push_back(name);
@@ -719,7 +729,8 @@ int sqlite_handle::check_name_any(const Name& name, const Selectors& selectors, 
 	}	
 }
 
-int sqlite_handle::check_data(Name &name, Data& data){
+int 
+SqliteHandle::check_data(Name &name, Data& data){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where name = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
@@ -747,7 +758,8 @@ int sqlite_handle::check_data(Name &name, Data& data){
 
 
 //This is the exact name qeury in database.
-int sqlite_handle::check_name(const Name& name){
+int 
+SqliteHandle::check_name(const Name& name){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where name = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
@@ -773,7 +785,8 @@ int sqlite_handle::check_name(const Name& name){
 }
 
 //This is the exact parent name qeury in database.
-int sqlite_handle::check_pname(Name& pname){
+int 
+SqliteHandle::check_pname(Name& pname){
 	sqlite3_stmt* pStmt = NULL;
 	string sql = string("select * from NDN_REPO where pname = ?;");
 	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &pStmt, NULL);
@@ -798,34 +811,42 @@ int sqlite_handle::check_pname(Name& pname){
 	return 1;
 }
 
-void sqlite_handle::sort_data_small(vector<Data>& datas){
-	sort(datas.begin(), datas.end(), sqlite_handle::compare_data_small);
+void 
+SqliteHandle::sort_data_small(vector<Data>& datas){
+	sort(datas.begin(), datas.end(), SqliteHandle::compare_data_small);
 }
 
-bool sqlite_handle::compare_data_small(Data data1, Data data2){
+bool 
+SqliteHandle::compare_data_small(Data data1, Data data2){
 	return (data1.getName()<data2.getName());
 }
 
-void sqlite_handle::sort_data_big(vector<Data>& datas){
-	sort(datas.begin(), datas.end(), sqlite_handle::compare_data_big);
+void 
+SqliteHandle::sort_data_big(vector<Data>& datas){
+	sort(datas.begin(), datas.end(), SqliteHandle::compare_data_big);
 }
 
-bool sqlite_handle::compare_data_big(Data data1, Data data2){
+bool 
+SqliteHandle::compare_data_big(Data data1, Data data2){
 	return (data1.getName()>data2.getName());
 }
 
-void sqlite_handle::sort_name_small(vector<Name>& names){
-	sort(names.begin(), names.end(), sqlite_handle::compare_name_small);
+void 
+SqliteHandle::sort_name_small(vector<Name>& names){
+	sort(names.begin(), names.end(), SqliteHandle::compare_name_small);
 }
 
-bool sqlite_handle::compare_name_small(Name name1, Name name2){
+bool 
+SqliteHandle::compare_name_small(Name name1, Name name2){
 	return (name1 < name2);
 }
 
-void sqlite_handle::sort_name_big(vector<Name>& names){
-	sort(names.begin(), names.end(), sqlite_handle::compare_name_big);
+void 
+SqliteHandle::sort_name_big(vector<Name>& names){
+	sort(names.begin(), names.end(), SqliteHandle::compare_name_big);
 }
 
-bool sqlite_handle::compare_name_big(Name name1, Name name2){
+bool 
+SqliteHandle::compare_name_big(Name name1, Name name2){
 	return (name1 > name2);
 }

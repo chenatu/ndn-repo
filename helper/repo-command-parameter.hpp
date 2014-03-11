@@ -4,25 +4,24 @@
  * See COPYING for copyright and distribution information.
  */
 
-#ifndef REPOCOMMANDPARAMETER_H
-#define REPOCOMMANDPARAMETER_H
+#ifndef REPO_COMMAND_PARAMETER_HPP
+#define REPO_COMMAND_PARAMETER_HPP
 
 #include <ndn-cpp-dev/encoding/encoding-buffer.hpp>
 #include <ndn-cpp-dev/name.hpp>
 #include <ndn-cpp-dev/selectors.hpp>
-#include "repo_tlv.h"
-
+#include "repo-tlv.hpp"
 using namespace ndn; 
 
-class repocommandparameter {
+class RepoCommandParameter {
 public:
   struct Error : public Tlv::Error { Error(const std::string &what) : Tlv::Error(what) {} };
-  repocommandparameter(){
+  RepoCommandParameter(){
     hasStartBlockId_ = 0;
     hasEndBlockId_ = 0;
     hasProcessId_ = 0;
   }
-  repocommandparameter(const Block& block)
+  RepoCommandParameter(const Block& block)
   {
     hasStartBlockId_ = 0;
     hasEndBlockId_ = 0;
@@ -36,7 +35,7 @@ public:
     return name_;
   }
   
-  repocommandparameter&
+  RepoCommandParameter&
   setName (const Name& name)
   {
     name_ = name;
@@ -50,7 +49,7 @@ public:
     return selectors_;
   }
   
-  repocommandparameter&
+  RepoCommandParameter&
   setSelectors (const Selectors& selectors)
   {
     selectors_ = selectors;
@@ -70,7 +69,7 @@ public:
     return startBlockId_;
   }
 
-  repocommandparameter&
+  RepoCommandParameter&
   setStartBlockId (uint64_t startBlockId)
   {
     startBlockId_  = startBlockId;
@@ -91,7 +90,7 @@ public:
     return endBlockId_;
   }
   
-  repocommandparameter&
+  RepoCommandParameter&
   setEndBlockId (uint64_t endBlockId)
   {
     endBlockId_  = endBlockId;
@@ -119,7 +118,7 @@ public:
     return hasProcessId_;
   }  
 
-  repocommandparameter&
+  RepoCommandParameter&
   setProcessId (uint64_t processId)
   {
     processId_  = processId;
@@ -155,7 +154,7 @@ private:
 
 template<bool T>
 inline size_t
-repocommandparameter::wireEncode(EncodingImpl<T>& blk) const
+RepoCommandParameter::wireEncode(EncodingImpl<T>& blk) const
 {
   size_t total_len = 0;
   size_t var_len = 0;
@@ -197,7 +196,7 @@ repocommandparameter::wireEncode(EncodingImpl<T>& blk) const
 }
 
 inline const Block&
-repocommandparameter::wireEncode () const
+RepoCommandParameter::wireEncode () const
 {
   if (wire_.hasWire ())
     return wire_;
@@ -213,7 +212,7 @@ repocommandparameter::wireEncode () const
 }
 
 inline void 
-repocommandparameter::wireDecode (const Block &wire)
+RepoCommandParameter::wireDecode (const Block &wire)
 {
 
   wire_ = wire;
@@ -262,7 +261,7 @@ repocommandparameter::wireDecode (const Block &wire)
 }
 
 inline std::ostream&
-operator << (std::ostream &os, const repocommandparameter &option)
+operator << (std::ostream &os, const RepoCommandParameter &option)
 {
   os << "ForwardingEntry(";
   
@@ -282,4 +281,4 @@ operator << (std::ostream &os, const repocommandparameter &option)
   return os;
 }
 
-#endif //REPOCOMMANDPARAMETER_H
+#endif //RepoCommandParameter_H

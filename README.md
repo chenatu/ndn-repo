@@ -1,4 +1,4 @@
-ndn_repo:  A basic version of NDN repository
+ndn-repo:  A basic version of NDN repository
 ---------------------------------------------------------------------------
 
 ndn_repo is an implementation of a Named Data Networking data repository.

@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-#include "../storage/sqlite/sqlite_handle.h"
+#include "../storage/sqlite/sqlite-handle.hpp"
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
             break;
         }
     }
-   sqlite_handle handle = sqlite_handle(dbpath);
+   SqliteHandle handle = SqliteHandle(dbpath);
 
     KeyChain keyChain;
 

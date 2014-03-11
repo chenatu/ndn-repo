@@ -4,6 +4,7 @@
 *.o
 
 *.cc~
+*.hpp~
 *.h~
 
 
@@ -16,3 +17,5 @@ build/
 *.dat
 *.properties
 *.pyc
+
+.tags*

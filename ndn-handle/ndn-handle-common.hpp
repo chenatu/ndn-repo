@@ -15,12 +15,12 @@
 #include <ndn-cpp-dev/face.hpp>
 //#include <ndn-cpp-dev/status-response.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
-#include "../helper/repovalidator.h"
+#include "../helper/repo-command-validator.hpp"
 //#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 //#include <ndn-cpp-dev/management/nfd-control-response.hpp>
-#include "../helper/repocommandresponse.h"
-#include "../helper/repocommandparameter.h"
-#include "../storage/storage_handle.h"
+#include "../helper/repo-command-response.hpp"
+#include "../helper/repo-command-parameter.hpp"
+#include "../storage/storage-handle.hpp"
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <map>

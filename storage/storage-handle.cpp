@@ -2,16 +2,18 @@
  * Copyright (C) 2013 Regents of the University of California.
  * See COPYING for copyright and distribution information.
  */
-#include "storage_handle.h"
+#include "storage-handle.hpp"
 
-storage_handle::storage_handle(){
+StorageHandle::StorageHandle(){
 	set_storage_method(STORAGE_METHOD_BASE);
 }
 
-int storage_handle::get_storage_method(){
+int 
+StorageHandle::get_storage_method(){
 	return __storage_method;
 }
 
-void storage_handle::set_storage_method(int storage_method){
+void 
+StorageHandle::set_storage_method(int storage_method){
 	__storage_method = storage_method;
 }

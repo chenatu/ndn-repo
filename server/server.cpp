@@ -20,23 +20,26 @@
 #include <assert.h>
 //#include <ndn-cpp-dev/helper/command-interest-validator.hpp>
 
-#include "../storage/storage_handle.h"
-#include "../storage/sqlite/sqlite_handle.h"
-#include "../ndn_handle/write_echo.h"
-#include "../ndn_handle/read_echo.h"
-#include "../ndn_handle/delete_echo.h"
+#include "../storage/storage-handle.hpp"
+#include "../storage/sqlite/sqlite-handle.hpp"
+#include "../ndn-handle/write-echo.hpp"
+#include "../ndn-handle/read-echo.hpp"
+#include "../ndn-handle/delete-echo.hpp"
 
 using namespace std;
 using namespace ndn;
 
-static const string ccnr_usage_message(
-"ndn_repo - NDNx Repository Daemon\n"
+static const string 
+ndn_repo_usage_message(
+"ndn-repo - NDNx Repository Daemon\n"
 "Welcome!\n"
 );
 
-int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo& decho);
+int 
+confInit(string confpath, ReadEcho& recho, WriteEcho& wecho, DeleteEcho& decho);
 
-int main(int argc, char **argv) {
+int 
+main(int argc, char **argv) {
     int opt;
     string dbpath;
     string confpath;
@@ -45,7 +48,7 @@ int main(int argc, char **argv) {
         case 'd':
             dbpath = string(optarg);
         case 'h':
-            cout<<ccnr_usage_message<<endl;
+            cout<<ndn_repo_usage_message<<endl;
         case 'c':
             confpath = string(optarg);
         default:
@@ -53,8 +56,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    sqlite_handle s_handle = sqlite_handle(dbpath);
-    storage_handle *p_handle = &s_handle;
+    SqliteHandle s_handle = SqliteHandle(dbpath);
+    StorageHandle *p_handle = &s_handle;
 
 //copy from ndn-ccp testfile
     try {
@@ -62,17 +65,17 @@ int main(int argc, char **argv) {
 
         //validation set up
         KeyChain keyChain;
-        repovalidator validator;
+        RepoCommandValidator validator;
         validator.addInterestRule("^<>", *keyChain.getCertificate(keyChain.getDefaultCertificateName()));
         cout<<"default cert"<<keyChain.getDefaultCertificateName()<<endl;
 
-        read_echo recho(&face, p_handle);
-        write_echo wecho(&face, p_handle, validator);
-        delete_echo decho(&face, p_handle, validator);
+        ReadEcho recho(&face, p_handle);
+        WriteEcho wecho(&face, p_handle, validator);
+        DeleteEcho decho(&face, p_handle, validator);
         if(confpath.empty()){
             confpath = "./repo.conf";
         }
-        conf_init(confpath, recho, wecho, decho);
+        confInit(confpath, recho, wecho, decho);
         face.processEvents();
     } catch (std::exception& e) {
         cout << "exception: " << e.what() << endl;
@@ -82,7 +85,8 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int conf_init(string confpath, read_echo& recho, write_echo& wecho, delete_echo& decho){
+int 
+confInit(string confpath, ReadEcho& recho, WriteEcho& wecho, DeleteEcho& decho){
     ifstream fin;
     cout<<confpath.c_str()<<endl;
     fin.open(confpath.c_str());

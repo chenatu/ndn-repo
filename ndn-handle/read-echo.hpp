@@ -2,26 +2,29 @@
  * Copyright (C) 2013 Regents of the University of California.
  * See COPYING for copyright and distribution information.
  */
-#ifndef READ_ECHO_H
-#define READ_ECHO_H
+#ifndef ReadEcho_H
+#define ReadEcho_H
 
-#include "ndn_handle_common.h"
+#include "ndn-handle-common.hpp"
 
-class read_echo{
+class ReadEcho{
 public:
-  read_echo(Face* face, storage_handle* p_handle)
+  ReadEcho(Face* face, StorageHandle* p_handle)
     : face_(face)
     , p_handle_(p_handle)
   { 
   }
   
   // onInterest. Read the name from database
-  void onInterest(const Name& prefix, const Interest& interest);
+  void 
+  onInterest(const Name& prefix, const Interest& interest);
   
   // onRegisterFailed.
-  void onRegisterFailed(const Name& prefix, const std::string& reason);
+  void 
+  onRegisterFailed(const Name& prefix, const std::string& reason);
 
-  void readListen(const Name& prefix);
+  void 
+  readListen(const Name& prefix);
   const RegisteredPrefixId *id_;
 
 private:
@@ -29,7 +32,7 @@ private:
   Face* face_;
   Buffer ndndId_;
 
-  storage_handle* p_handle_;
+  StorageHandle* p_handle_;
 };
 
 #endif

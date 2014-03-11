@@ -12,7 +12,7 @@
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "../helper/repocommandparameter.h"
+#include "../helper/repo-command-parameter.hpp"
 //#include "face.hpp"
 
 using namespace std;
@@ -95,7 +95,7 @@ int main()
     //ndn::Interest i(ndn::Name("/a/b/c/e/a/b/c/d/7"));
     Name name("/a/b/c/insert");
     
-    repocommandparameter rpara;
+    RepoCommandParameter rpara;
     rpara.setStartBlockId(1);
     //rpara.setEndBlockId(1000);
 

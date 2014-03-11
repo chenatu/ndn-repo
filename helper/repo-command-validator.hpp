@@ -4,8 +4,8 @@
  * See COPYING for copyright and distribution information.
  */
 
-#ifndef REPOVALIDATOR_H
-#define REPOVALIDATOR_H
+#ifndef REPO_VALIDATOR_H
+#define REPO_VALIDATOR_H
 
 #include <ndn-cpp-dev/security/validator.hpp>
 #include <ndn-cpp-dev/security/identity-certificate.hpp>
@@ -13,8 +13,7 @@
 
 using namespace ndn;
 
-class repovalidator : public Validator
-{
+class RepoCommandValidator : public Validator {
 public:
   enum {
     POS_SIG_VALUE = -1,
@@ -25,11 +24,11 @@ public:
     GRACE_INTERVAL = 3000 // ms
   };
 
-  repovalidator(int64_t graceInterval = GRACE_INTERVAL) 
+  RepoCommandValidator(int64_t graceInterval = GRACE_INTERVAL) 
   { m_graceInterval = (graceInterval < 0 ? GRACE_INTERVAL : graceInterval); }
 
   virtual
-  ~repovalidator() {}
+  ~RepoCommandValidator() {}
 
   inline void
   addInterestRule(const std::string& regex, const IdentityCertificate& certificate);
@@ -60,14 +59,14 @@ private:
 };
 
 inline void
-repovalidator::addInterestRule(const std::string& regex, const IdentityCertificate& certificate)
+RepoCommandValidator::addInterestRule(const std::string& regex, const IdentityCertificate& certificate)
 {
   Name keyName = IdentityCertificate::certificateNameToPublicKeyName(certificate.getName());
   addInterestRule(regex, keyName, certificate.getPublicKeyInfo());
 }
 
 inline void
-repovalidator::addInterestRule(const std::string& regex, const Name& keyName, const PublicKey& publicKey)
+RepoCommandValidator::addInterestRule(const std::string& regex, const Name& keyName, const PublicKey& publicKey)
 {
   m_trustAnchorsForInterest[keyName] = publicKey;
   shared_ptr<Regex> interestRegex = make_shared<Regex>(regex);
@@ -76,7 +75,7 @@ repovalidator::addInterestRule(const std::string& regex, const Name& keyName, co
 }
 
 inline void
-repovalidator::checkPolicy (const Interest& interest, 
+RepoCommandValidator::checkPolicy (const Interest& interest, 
                                        int stepCount, 
                                        const OnInterestValidated &onValidated, 
                                        const OnInterestValidationFailed &onValidationFailed,

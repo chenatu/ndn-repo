@@ -2,10 +2,11 @@
  * Copyright (C) 2013 Regents of the University of California.
  * See COPYING for copyright and distribution information.
  */
-#include "read_echo.h"
+#include "read-echo.hpp"
 
 // Interest.
-void read_echo::onInterest(const Name& prefix, const Interest& interest) {
+void 
+ReadEcho::onInterest(const Name& prefix, const Interest& interest) {
   std::cout << "<< I: " << interest.getName() << std::endl;
 
   Name name = Name(interest.getName());
@@ -21,13 +22,15 @@ void read_echo::onInterest(const Name& prefix, const Interest& interest) {
 }
 
 // onRegisterFailed.
-void read_echo::onRegisterFailed(const Name& prefix, const std::string& reason){
+void 
+ReadEcho::onRegisterFailed(const Name& prefix, const std::string& reason){
   std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
   face_->shutdown();
 }
 
-void read_echo::readListen(const Name& prefix){
+void 
+ReadEcho::readListen(const Name& prefix){
   (*face_).setInterestFilter(prefix,
-                            func_lib::bind(&read_echo::onInterest, this, _1, _2),
-                            func_lib::bind(&read_echo::onRegisterFailed, this, _1, _2));
+                            func_lib::bind(&ReadEcho::onInterest, this, _1, _2),
+                            func_lib::bind(&ReadEcho::onRegisterFailed, this, _1, _2));
 }

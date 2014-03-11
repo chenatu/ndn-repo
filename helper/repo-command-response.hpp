@@ -4,31 +4,31 @@
  * See COPYING for copyright and distribution information.
  */
 
-#ifndef REPOCOMMANDRESPONSE_HPP
-#define REPOCOMMANDRESPONSE_HPP
+#ifndef REPO_COMMAND_RESPONSE_HPP
+#define REPO_COMMAND_RESPONSE_HPP
 
 #include <ndn-cpp-dev/encoding/block.hpp>
 #include <ndn-cpp-dev/encoding/tlv-nfd.hpp>
-#include "repo_tlv.h"
+#include "repo-tlv.hpp"
 
 /**
- * @brief Class defining abstraction of repocommandresponse for NFD Control Protocol
+ * @brief Class defining abstraction of RepoCommandResponse for NFD Control Protocol
  *
  * @see http://redmine.named-data.net/projects/nfd/wiki/ControlCommand
  */
 
 
-class repocommandresponse {
+class RepoCommandResponse {
 public:
   struct Error : public Tlv::Error { Error(const std::string &what) : Tlv::Error(what) {} };
-  repocommandresponse(){
+  RepoCommandResponse(){
     hasStartBlockId_ = 0;
     hasEndBlockId_ = 0;
     hasProcessId_ = 0;
     hasInsertNum_ = 0;
     hasDeleteNum_ = 0;
   }
-  repocommandresponse(const Block& block)
+  RepoCommandResponse(const Block& block)
   {
     startBlockId_ = 0;
     endBlockId_ = 0;
@@ -45,7 +45,7 @@ public:
     return startBlockId_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setStartBlockId (uint64_t startBlockId)
   {
     startBlockId_  = startBlockId;
@@ -66,7 +66,7 @@ public:
     return endBlockId_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setEndBlockId (uint64_t endBlockId)
   {
     endBlockId_  = endBlockId;
@@ -88,7 +88,7 @@ public:
     return processId_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setProcessId (uint64_t processId)
   {
     processId_  = processId;
@@ -109,7 +109,7 @@ public:
     return statusCode_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setStatusCode (uint64_t statusCode)
   {
     statusCode_  = statusCode;
@@ -130,7 +130,7 @@ public:
     return insertNum_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setInsertNum (uint64_t insertNum)
   {
     insertNum_  = insertNum;
@@ -151,7 +151,7 @@ public:
     return deleteNum_;
   }
   
-  repocommandresponse&
+  RepoCommandResponse&
   setDeleteNum (uint64_t deleteNum)
   {
     deleteNum_  = deleteNum;
@@ -198,7 +198,7 @@ private:
 
 template<bool T>
 inline size_t
-repocommandresponse::wireEncode(EncodingImpl<T>& blk) const
+RepoCommandResponse::wireEncode(EncodingImpl<T>& blk) const
 {
   size_t total_len = 0;
   size_t var_len = 0;
@@ -248,14 +248,14 @@ repocommandresponse::wireEncode(EncodingImpl<T>& blk) const
     total_len += blk.prependVarNumber (tlv_repo::DeleteNum);
   }
 
-//prepare repocommandresponse
+//prepare RepoCommandResponse
   total_len += blk.prependVarNumber (total_len);
   total_len += blk.prependVarNumber (tlv_repo::RepoCommandResponse);
   return total_len;
 }
 
 inline const Block&
-repocommandresponse::wireEncode () const
+RepoCommandResponse::wireEncode () const
 {
   if (wire_.hasWire ())
     return wire_;
@@ -271,7 +271,7 @@ repocommandresponse::wireEncode () const
 }
 
 inline void 
-repocommandresponse::wireDecode (const Block &wire)
+RepoCommandResponse::wireDecode (const Block &wire)
 {
 
   wire_ = wire;
@@ -281,7 +281,7 @@ repocommandresponse::wireDecode (const Block &wire)
   Block::element_const_iterator val;
 
   if (wire_.type() != tlv_repo::RepoCommandResponse)
-    throw Error("Requested decoding of repocommandresponse, but Block is of different type");
+    throw Error("Requested decoding of RepoCommandResponse, but Block is of different type");
 
   // StartBlockId
   val = wire_.find(tlv_repo::StartBlockId);
@@ -334,7 +334,7 @@ repocommandresponse::wireDecode (const Block &wire)
 }
 
 inline std::ostream&
-operator << (std::ostream &os, const repocommandresponse &option)
+operator << (std::ostream &os, const RepoCommandResponse &option)
 {
   os << "ForwardingEntry(";
   
@@ -345,4 +345,4 @@ operator << (std::ostream &os, const repocommandresponse &option)
   return os;
 }
 
-#endif //repocommandresponse_H
+#endif //RepoCommandResponse_H
