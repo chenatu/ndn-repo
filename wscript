@@ -74,13 +74,6 @@ def build (bld):
             includes = ".",
             )
         bld (
-            target = "test/test-command-interest",
-            features = ["cxx", "cxxprogram"],
-            source = bld.path.ant_glob(['test/test-command-interest.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),
-            use = 'BOOST SQLITE3 NDNCPPDEV',
-            includes = ".",
-            )
-        bld (
             target = "test/insert-client",
             features = ["cxx", "cxxprogram"],
             source = bld.path.ant_glob(['test/insert-client.cpp','ndn-handle/*.cpp','storage/*.cpp','storage/sqlite/*.cpp', 'helpers/*.cpp']),

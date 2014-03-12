@@ -27,7 +27,7 @@
 
 #define TIMEOUTRETRY 3
 #define DEFAULTCREDIT 12
-#define NOENDTIMEOUT 100000
+#define NOENDTIMEOUT 10000
 
 using namespace std;
 using namespace ndn;

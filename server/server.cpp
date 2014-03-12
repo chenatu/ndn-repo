@@ -16,7 +16,7 @@
 
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
+#include <ndn-cpp-dev/util/command-interest-generator.hpp>
 #include <assert.h>
 //#include <ndn-cpp-dev/helpers/command-interest-validator.hpp>
 

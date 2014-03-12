@@ -8,7 +8,7 @@
 // correct way to include NDN-CPP headers
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/helpers/command-interest-generator.hpp>
+#include <ndn-cpp-dev/util/command-interest-generator.hpp>
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -32,7 +32,7 @@ public:
   onInterest(const Name& name, const Interest& interest)
   {
     //cout<<"onInterest"<<endl;
-    std::cout << "<< I: " << interest << std::endl;
+    //std::cout << "<< I: " << interest << std::endl;
     
     ndn::Data data(ndn::Name(interest.getName()));
     //cout<<<<interest.getName()<<endl;
@@ -97,7 +97,7 @@ int main()
     
     RepoCommandParameter rpara;
     rpara.setStartBlockId(1);
-    //rpara.setEndBlockId(1000);
+    //rpara.setEndBlockId(100);
 
     rpara.setName(Name("/a/b/c/d/8"));
 
